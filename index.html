@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula de Español · KOICA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    safelist: [
+      { pattern: /(bg|text|border)-(emerald|amber|rose|indigo|slate|sky)-(50|100|200|300|400|500|600|700|800)/ }
+    ]
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
+  .nav-btn { color: #64748b; transition: all 0.15s; }
+  .nav-btn:hover { background: #f1f5f9; color: #0f172a; }
+  .nav-btn.active { background: #4f46e5; color: white; }
+  .nav-btn.active:hover { background: #4338ca; color: white; }
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .flash-side { transition: opacity 0.2s; }
+  .progress-bar { transition: width 0.6s ease-out; }
+  .quiz-option { transition: all 0.15s; }
+  .quiz-option:hover:not(.locked) { background: #eef2ff; border-color: #6366f1; }
+  .quiz-option.selected { background: #eef2ff; border-color: #4f46e5; }
+  .quiz-option.correct { background: #dcfce7; border-color: #16a34a; color: #14532d; }
+  .quiz-option.wrong { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
+  .quiz-option.locked { cursor: not-allowed; }
+  kbd { font-family: 'Inter', monospace; background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font-size: 0.75rem; color: #475569; }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900">
+
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-20">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">A</div>
+      <div>
+        <div class="font-semibold text-slate-900">Aula de Español</div>
+        <div class="text-xs text-slate-500">KOICA · FLEX 대비 · 실무 회화</div>
+      </div>
+    </div>
+    <div class="flex gap-1 flex-wrap">
+      <button data-nav="dashboard" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium active">대시보드</button>
+      <button data-nav="flashcards" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium">플래시카드</button>
+      <button data-nav="quiz" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium">퀴즈</button>
+      <button data-nav="reading" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium">📖 읽기</button>
+      <button data-nav="roleplay" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium">🎭 롤플레이</button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+
+  <!-- ========================================================== -->
+  <!-- DASHBOARD                                                   -->
+  <!-- ========================================================== -->
+  <section id="view-dashboard" class="space-y-6 fade-in">
+    <header>
+      <h1 class="text-3xl font-bold text-slate-900">Hola 👋</h1>
+      <p class="text-slate-600 mt-1">B1 · KOICA 사업담당자/부소장 트랙 · 오늘도 한 걸음</p>
+    </header>
+
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">오늘 복습할 카드</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <div id="stat-due" class="text-4xl font-bold text-indigo-600">0</div>
+          <div class="text-slate-500">/ <span id="stat-total">0</span></div>
+        </div>
+        <button data-nav="flashcards" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg">바로 학습</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">퀴즈 누적 정답률</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <div id="stat-acc" class="text-4xl font-bold text-emerald-600">—</div>
+          <div class="text-slate-500"><span id="stat-quiz-count">0</span>회 응시</div>
+        </div>
+        <button data-nav="quiz" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2 rounded-lg">퀴즈 응시</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">학습 일수</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <div id="stat-streak" class="text-4xl font-bold text-amber-600">0</div>
+          <div class="text-slate-500">일 연속</div>
+        </div>
+        <div id="stat-last" class="mt-3 text-xs text-slate-500">아직 시작 전</div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <h2 class="font-semibold text-slate-900 mb-4">오늘의 추천</h2>
+      <div id="recommend" class="text-slate-700 leading-relaxed"></div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-slate-900">🅰 FLEX 시험 트랙</h3>
+          <span id="track-flex-pct" class="text-sm font-medium text-slate-500">0%</span>
+        </div>
+        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div id="track-flex-bar" class="progress-bar h-full bg-indigo-600" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">시험 빈출 어휘·문법 카드 마스터율</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-slate-900">🅱 KOICA 업무 트랙</h3>
+          <span id="track-work-pct" class="text-sm font-medium text-slate-500">0%</span>
+        </div>
+        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div id="track-work-bar" class="progress-bar h-full bg-emerald-600" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">ODA·KOICA 직책·외교 격식 어휘 마스터율</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="font-semibold text-slate-900">💾 진도 백업</h3>
+        <span id="save-status" class="text-xs font-medium text-emerald-600"></span>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">매 카드·문항마다 브라우저에 자동 저장됩니다. 더 안전한 백업을 원하면 파일 자동저장을 켜세요.</p>
+      <div id="autosave-info" class="hidden text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-3"></div>
+      <div class="flex gap-2 mb-3">
+        <button id="btn-export" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2 rounded-lg">📥 지금 내보내기</button>
+        <label class="flex-1 cursor-pointer bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 text-sm font-medium py-2 rounded-lg text-center">
+          📤 불러오기
+          <input type="file" id="file-import" accept=".json" class="hidden">
+        </label>
+      </div>
+      <button id="btn-autosave" class="w-full text-xs text-indigo-600 hover:text-indigo-700 py-1">🔄 파일 자동저장 켜기 (Chrome/Edge)</button>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <h3 class="font-semibold text-slate-900 mb-4">📊 카테고리별 정답률</h3>
+      <div id="weakness-chart" class="space-y-2"></div>
+    </div>
+
+    <div class="text-center pt-4">
+      <button id="btn-reset" class="text-xs text-slate-400 hover:text-rose-500">진도 초기화</button>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- FLASHCARDS                                                  -->
+  <!-- ========================================================== -->
+  <section id="view-flashcards" class="hidden space-y-6">
+    <div id="flash-setup" class="space-y-6 fade-in">
+      <header>
+        <h1 class="text-3xl font-bold text-slate-900">플래시카드</h1>
+        <p class="text-slate-600 mt-1">간격 반복(SRS) · 정답시 노출 간격이 자동으로 늘어납니다</p>
+      </header>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 class="font-semibold mb-3">학습 트랙</h3>
+        <div id="flash-track-buttons" class="grid grid-cols-3 gap-2 mb-5"></div>
+
+        <h3 class="font-semibold mb-3">학습 범위</h3>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+            <input type="radio" name="flash-mode" value="due" checked class="accent-indigo-600">
+            <div class="flex-1">
+              <div class="font-medium text-sm">오늘 복습 대상만 <span id="opt-due-count" class="text-indigo-600 font-semibold"></span></div>
+              <div class="text-xs text-slate-500">SRS 일정에 따라 오늘 봐야 할 카드</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+            <input type="radio" name="flash-mode" value="all" class="accent-indigo-600">
+            <div class="flex-1">
+              <div class="font-medium text-sm">전체 카드 (랜덤)</div>
+              <div class="text-xs text-slate-500">진도 무시하고 무작위로 학습</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+            <input type="radio" name="flash-mode" value="weak" class="accent-indigo-600">
+            <div class="flex-1">
+              <div class="font-medium text-sm">약점 카드만 <span id="opt-weak-count" class="text-rose-600 font-semibold"></span></div>
+              <div class="text-xs text-slate-500">정답률이 낮거나 자주 틀린 카드</div>
+            </div>
+          </label>
+        </div>
+        <div class="mt-5">
+          <div class="text-sm font-medium mb-2">카테고리 필터</div>
+          <div id="flash-cat-filter" class="flex flex-wrap gap-2"></div>
+        </div>
+        <button id="btn-flash-start" class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg">학습 시작</button>
+      </div>
+    </div>
+
+    <div id="flash-session" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-4 text-sm">
+        <button id="btn-flash-quit" class="text-slate-500 hover:text-slate-900">← 종료</button>
+        <span id="flash-progress" class="text-slate-500 font-medium">0 / 0</span>
+        <div class="flex items-center gap-3">
+          <button id="btn-tts-toggle" class="text-slate-500 hover:text-slate-900" title="음성 자동재생 켜기/끄기">🔊 음성</button>
+          <button id="btn-tts-replay" class="text-slate-500 hover:text-slate-900" title="다시 듣기">↻</button>
+          <button id="btn-flash-prev" class="text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed" disabled>↶ 이전</button>
+        </div>
+      </div>
+      <div id="flash-card" class="relative min-h-80 mb-4 cursor-pointer rounded-2xl border border-slate-200 bg-white p-8 pb-12 flex flex-col items-center justify-center text-center transition-colors">
+        <div id="flash-line-top" class="text-xs font-medium uppercase tracking-wide mb-3">&nbsp;</div>
+        <div id="flash-line-main" class="text-3xl font-semibold px-4 break-words">로딩 중...</div>
+        <div id="flash-line-sub" class="text-sm italic mt-4 px-4 break-words"></div>
+        <div id="flash-line-extra" class="text-xs mt-2 px-4 break-words"></div>
+        <div id="flash-hint" class="absolute bottom-3 left-0 right-0 text-xs text-slate-400">클릭 또는 <kbd>Space</kbd> 로 한국어 보기</div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btn-wrong" class="bg-white hover:bg-rose-50 border-2 border-rose-300 text-rose-700 font-medium py-4 rounded-xl">
+          <div class="text-base">모름</div>
+          <div class="text-xs opacity-70 mt-1"><kbd>1</kbd></div>
+        </button>
+        <button id="btn-correct" class="bg-white hover:bg-emerald-50 border-2 border-emerald-300 text-emerald-700 font-medium py-4 rounded-xl">
+          <div class="text-base">알아</div>
+          <div class="text-xs opacity-70 mt-1"><kbd>2</kbd></div>
+        </button>
+      </div>
+    </div>
+
+    <div id="flash-done" class="hidden fade-in text-center py-12">
+      <div class="text-5xl mb-4">🎉</div>
+      <h2 class="text-2xl font-bold mb-2">학습 완료</h2>
+      <p class="text-slate-600 mb-6"><span id="flash-result"></span></p>
+      <div class="flex gap-2 justify-center">
+        <button id="btn-flash-again" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium">다시 학습</button>
+        <button data-nav="dashboard" class="bg-white border border-slate-300 hover:bg-slate-50 px-5 py-2 rounded-lg font-medium">대시보드로</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- QUIZ                                                        -->
+  <!-- ========================================================== -->
+  <section id="view-quiz" class="hidden space-y-6">
+    <div id="quiz-setup" class="space-y-6 fade-in">
+      <header>
+        <h1 class="text-3xl font-bold text-slate-900">퀴즈</h1>
+        <p class="text-slate-600 mt-1">객관식 즉시 채점 · 카테고리별 약점 자동 집계</p>
+      </header>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 class="font-semibold mb-3">학습 트랙</h3>
+        <div id="quiz-track-buttons" class="grid grid-cols-3 gap-2 mb-5"></div>
+
+        <h3 class="font-semibold mb-3">카테고리 선택</h3>
+        <div id="quiz-cat-list" class="grid sm:grid-cols-2 gap-3"></div>
+        <div class="mt-5">
+          <label class="text-sm font-medium">문항 수</label>
+          <div class="flex gap-2 mt-2">
+            <button data-q-count="5" class="q-count-btn flex-1 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium">5문항</button>
+            <button data-q-count="10" class="q-count-btn flex-1 py-2 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-sm font-medium active">10문항</button>
+            <button data-q-count="20" class="q-count-btn flex-1 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium">20문항</button>
+          </div>
+        </div>
+        <button id="btn-quiz-start" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg">퀴즈 시작</button>
+      </div>
+    </div>
+
+    <div id="quiz-session" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <button id="btn-quiz-quit" class="text-sm text-slate-500 hover:text-slate-900">← 종료</button>
+        <div class="text-sm text-slate-500"><span id="quiz-progress">0 / 0</span></div>
+      </div>
+      <div class="h-1 bg-slate-100 rounded-full mb-6 overflow-hidden">
+        <div id="quiz-bar" class="progress-bar h-full bg-emerald-600" style="width:0%"></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div id="quiz-cat" class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3"></div>
+        <div id="quiz-q" class="text-lg font-medium text-slate-900 mb-6 leading-relaxed"></div>
+        <div id="quiz-options" class="space-y-2"></div>
+        <div id="quiz-feedback" class="hidden mt-5 p-4 rounded-lg"></div>
+        <button id="btn-quiz-next" class="hidden mt-5 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg">다음 →</button>
+      </div>
+    </div>
+
+    <div id="quiz-done" class="hidden fade-in">
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+        <div class="text-5xl mb-3">📊</div>
+        <h2 class="text-2xl font-bold mb-2">퀴즈 완료</h2>
+        <div class="text-5xl font-bold text-emerald-600 my-4"><span id="quiz-score"></span><span class="text-xl text-slate-400 font-normal"> / <span id="quiz-total"></span></span></div>
+        <p class="text-slate-600 mb-6"><span id="quiz-pct"></span>%</p>
+        <div id="quiz-cat-breakdown" class="text-left mb-6 space-y-2"></div>
+        <div class="flex gap-2 justify-center">
+          <button id="btn-quiz-again" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-medium">한 번 더</button>
+          <button data-nav="dashboard" class="bg-white border border-slate-300 hover:bg-slate-50 px-5 py-2 rounded-lg font-medium">대시보드로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- READING                                                     -->
+  <!-- ========================================================== -->
+  <section id="view-reading" class="hidden space-y-6">
+    <div id="reading-list" class="space-y-6 fade-in">
+      <header>
+        <h1 class="text-3xl font-bold text-slate-900">📖 읽기 연습</h1>
+        <p class="text-slate-600 mt-1">중남미 개발협력·시사 지문 + 객관식 · 시간 측정</p>
+      </header>
+      <div id="reading-passage-list" class="space-y-3"></div>
+    </div>
+
+    <div id="reading-passage-view" class="hidden fade-in space-y-4">
+      <div class="flex items-center justify-between text-sm">
+        <button id="btn-reading-back" class="text-slate-500 hover:text-slate-900">← 목록으로</button>
+        <span id="reading-timer" class="text-slate-500 font-medium">0:00</span>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div id="reading-cat" class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2"></div>
+        <h2 id="reading-title" class="text-2xl font-bold mb-4"></h2>
+        <div id="reading-body" class="prose-sm leading-relaxed text-slate-700 space-y-3"></div>
+      </div>
+      <button id="btn-reading-start-q" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg">문제 풀기 시작</button>
+    </div>
+
+    <div id="reading-quiz" class="hidden fade-in space-y-4">
+      <div class="flex items-center justify-between text-sm">
+        <button id="btn-reading-quit" class="text-slate-500 hover:text-slate-900">← 종료</button>
+        <span id="reading-q-progress" class="text-slate-500 font-medium">0 / 0</span>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div id="reading-q-text" class="text-base font-medium mb-4"></div>
+        <div id="reading-q-options" class="space-y-2"></div>
+        <div id="reading-q-feedback" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+        <button id="btn-reading-q-next" class="hidden mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg">다음 →</button>
+      </div>
+    </div>
+
+    <div id="reading-done" class="hidden fade-in">
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+        <div class="text-5xl mb-3">📖</div>
+        <h2 class="text-2xl font-bold mb-2">완료</h2>
+        <div class="text-5xl font-bold text-indigo-600 my-4"><span id="reading-score"></span><span class="text-xl text-slate-400 font-normal"> / <span id="reading-total"></span></span></div>
+        <p class="text-slate-600 mb-2"><span id="reading-pct"></span>%</p>
+        <p class="text-slate-500 text-sm mb-6">소요 시간: <span id="reading-time-final"></span></p>
+        <div class="flex gap-2 justify-center">
+          <button id="btn-reading-back2" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium">목록으로</button>
+          <button data-nav="dashboard" class="bg-white border border-slate-300 hover:bg-slate-50 px-5 py-2 rounded-lg font-medium">대시보드로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- ROLEPLAY                                                    -->
+  <!-- ========================================================== -->
+  <section id="view-roleplay" class="hidden space-y-6">
+    <div id="roleplay-list" class="space-y-6 fade-in">
+      <header>
+        <h1 class="text-3xl font-bold text-slate-900">🎭 롤플레이</h1>
+        <p class="text-slate-600 mt-1">KOICA 사업담당자/부소장 5개 시나리오 · TTS 음독 지원</p>
+      </header>
+      <div id="roleplay-scenario-list" class="space-y-3"></div>
+    </div>
+
+    <div id="roleplay-view" class="hidden fade-in space-y-4">
+      <div class="flex items-center justify-between text-sm">
+        <button id="btn-roleplay-back" class="text-slate-500 hover:text-slate-900">← 목록으로</button>
+        <div class="flex gap-2 items-center">
+          <button id="btn-roleplay-mode" class="text-xs px-3 py-1 rounded-full border border-slate-300 hover:bg-slate-50">한국어 보기</button>
+          <button id="btn-roleplay-playall" class="text-xs px-3 py-1 rounded-full border border-slate-300 hover:bg-slate-50">▶ 전체 재생</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div id="roleplay-cat" class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2"></div>
+        <h2 id="roleplay-title" class="text-2xl font-bold mb-2"></h2>
+        <p id="roleplay-context" class="text-sm text-slate-600 mb-6"></p>
+        <div id="roleplay-dialogue" class="space-y-3"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const CARDS = [
+  // ODA 기본 (15)
+  {id:'c01',es:'cooperación al desarrollo',ko:'개발협력',ex:'KOICA promueve la cooperación al desarrollo en América Latina.',exKo:'KOICA는 라틴아메리카에서 개발협력을 추진한다.',cat:'ODA 기본',track:'work'},
+  {id:'c02',es:'Ayuda Oficial al Desarrollo (AOD)',ko:'공적개발원조 (ODA)',ex:'Corea aumentó su AOD un 10% el año pasado.',exKo:'한국은 작년 ODA를 10% 증액했다.',cat:'ODA 기본',track:'work'},
+  {id:'c03',es:'país donante',ko:'공여국',ex:'Los países donantes se reúnen en el CAD-OCDE.',exKo:'공여국들은 OECD 개발원조위원회에서 회동한다.',cat:'ODA 기본',track:'work'},
+  {id:'c04',es:'país socio',ko:'협력국 (수원국)',ex:'El país socio asume la propiedad del proyecto.',exKo:'협력국이 사업의 주인의식을 가진다.',cat:'ODA 기본',track:'work'},
+  {id:'c05',es:'país en vías de desarrollo',ko:'개발도상국',ex:'Muchos países en vías de desarrollo enfrentan brechas estructurales.',exKo:'많은 개발도상국이 구조적 격차에 직면하고 있다.',cat:'ODA 기본',track:'work'},
+  {id:'c06',es:'donación',ko:'무상원조',ex:'El proyecto se financia mediante donación no reembolsable.',exKo:'본 사업은 무상원조 방식으로 재원이 조달된다.',cat:'ODA 기본',track:'work'},
+  {id:'c07',es:'préstamo concesional',ko:'양허성 차관',ex:'EDCF otorga préstamos concesionales para infraestructura.',exKo:'EDCF는 인프라 분야에 양허성 차관을 제공한다.',cat:'ODA 기본',track:'work'},
+  {id:'c08',es:'cooperación técnica',ko:'기술협력',ex:'Enviamos consultores como parte de la cooperación técnica.',exKo:'우리는 기술협력의 일환으로 컨설턴트를 파견한다.',cat:'ODA 기본',track:'work'},
+  {id:'c09',es:'cooperación financiera',ko:'재정협력',ex:'La cooperación financiera incluye préstamos y donaciones.',exKo:'재정협력은 차관과 무상원조를 포함한다.',cat:'ODA 기본',track:'work'},
+  {id:'c10',es:'ayuda humanitaria',ko:'인도적 지원',ex:'Tras el terremoto se desplegó ayuda humanitaria de emergencia.',exKo:'지진 이후 긴급 인도적 지원이 전개되었다.',cat:'ODA 기본',track:'work'},
+  {id:'c11',es:'asistencia de emergencia',ko:'긴급구호',ex:'La asistencia de emergencia se activó en 48 horas.',exKo:'긴급구호가 48시간 내에 가동되었다.',cat:'ODA 기본',track:'work'},
+  {id:'c12',es:'socio implementador',ko:'시행 파트너',ex:'El socio implementador es responsable de la ejecución diaria.',exKo:'시행 파트너가 일상적 사업 수행을 책임진다.',cat:'ODA 기본',track:'work'},
+  {id:'c13',es:'beneficiario',ko:'수혜자',ex:'Los beneficiarios directos del proyecto son 5.000 familias.',exKo:'본 사업의 직접 수혜자는 5,000가구이다.',cat:'ODA 기본',track:'work'},
+  {id:'c14',es:'contraparte',ko:'카운터파트',ex:'Mi contraparte en el Ministerio es el Director General.',exKo:'부처 측 카운터파트는 국장이다.',cat:'ODA 기본',track:'work'},
+  {id:'c15',es:'cooperación triangular',ko:'삼각협력',ex:'La cooperación triangular involucra a tres actores: donante, socio sur y socio destinatario.',exKo:'삼각협력은 공여국·남측 파트너·수혜국 세 행위자가 참여한다.',cat:'ODA 기본',track:'work'},
+
+  // KOICA 직책·조직 (10)
+  {id:'c16',es:'Gestor de Proyectos',ko:'사업담당자',ex:'Soy Gestor de Proyectos de la Oficina de KOICA en Lima.',exKo:'저는 KOICA 리마사무소 사업담당자입니다.',cat:'KOICA 직책',track:'work'},
+  {id:'c17',es:'Subdirector de la Oficina',ko:'사무소 부소장',ex:'Como Subdirectora, presido reuniones cuando el Director está ausente.',exKo:'부소장으로서 사무소장 부재시 회의를 주재합니다.',cat:'KOICA 직책',track:'work'},
+  {id:'c18',es:'Director de la Oficina',ko:'사무소장',ex:'El Director de la Oficina representa a KOICA ante el Gobierno anfitrión.',exKo:'사무소장은 주재국 정부 앞에서 KOICA를 대표한다.',cat:'KOICA 직책',track:'work'},
+  {id:'c19',es:'sede de KOICA',ko:'KOICA 본부',ex:'La sede de KOICA está en Seongnam, Corea.',exKo:'KOICA 본부는 한국 성남에 있다.',cat:'KOICA 직책',track:'work'},
+  {id:'c20',es:'Oficina de KOICA en [País]',ko:'KOICA OO 사무소',ex:'La Oficina de KOICA en México coordina diez proyectos activos.',exKo:'KOICA 멕시코사무소는 진행 중인 10개 사업을 조율한다.',cat:'KOICA 직책',track:'work'},
+  {id:'c21',es:'asistente local',ko:'현지직원',ex:'Los asistentes locales son fundamentales para la operación de la Oficina.',exKo:'현지직원은 사무소 운영에 핵심적이다.',cat:'KOICA 직책',track:'work'},
+  {id:'c22',es:'Plan de Cooperación al Desarrollo (PCD)',ko:'국별협력전략',ex:'El PCD Corea-Perú define las prioridades 2024-2028.',exKo:'한·페루 PCD가 2024-2028 우선순위를 규정한다.',cat:'KOICA 직책',track:'work'},
+  {id:'c23',es:'tener a cargo',ko:'담당하다',ex:'Tengo a cargo tres proyectos del sector salud.',exKo:'저는 보건분야 사업 3개를 담당하고 있습니다.',cat:'KOICA 직책',track:'work'},
+  {id:'c24',es:'servir de enlace',ko:'가교 역할 하다',ex:'Sirvo de enlace entre la sede y la contraparte.',exKo:'본부와 수원기관 간 가교 역할을 합니다.',cat:'KOICA 직책',track:'work'},
+  {id:'c25',es:'rendir cuentas a',ko:'~에게 보고·책무 이행',ex:'La Oficina rinde cuentas mensualmente a la sede.',exKo:'사무소는 본부에 매월 보고·정산한다.',cat:'KOICA 직책',track:'work'},
+
+  // 사업 단계 (15)
+  {id:'c26',es:'identificación de proyecto',ko:'사업 발굴',ex:'La identificación de proyecto inicia con la solicitud del país socio.',exKo:'사업 발굴은 협력국의 요청으로 시작된다.',cat:'사업 단계',track:'work'},
+  {id:'c27',es:'estudio preliminar',ko:'예비조사',ex:'El estudio preliminar dura unos diez días.',exKo:'예비조사는 약 10일간 진행된다.',cat:'사업 단계',track:'work'},
+  {id:'c28',es:'misión de identificación',ko:'발굴 미션',ex:'La misión de identificación se realizó del 10 al 17 de junio.',exKo:'발굴 미션은 6월 10~17일에 실시되었다.',cat:'사업 단계',track:'work'},
+  {id:'c29',es:'estudio de factibilidad',ko:'타당성조사',ex:'El estudio de factibilidad concluye que el proyecto es viable.',exKo:'타당성조사 결과 사업이 실행가능하다는 결론이다.',cat:'사업 단계',track:'work'},
+  {id:'c30',es:'estudio de planificación',ko:'기획조사',ex:'El estudio de planificación define la matriz de marco lógico.',exKo:'기획조사는 논리모형을 정의한다.',cat:'사업 단계',track:'work'},
+  {id:'c31',es:'matriz de marco lógico (MML)',ko:'논리모형',ex:'La MML estructura objetivos, resultados e indicadores.',exKo:'논리모형은 목표·성과·지표를 구조화한다.',cat:'사업 단계',track:'work'},
+  {id:'c32',es:'objetivo general',ko:'일반목표',ex:'El objetivo general es contribuir a mejorar la calidad educativa.',exKo:'일반목표는 교육의 질 개선에 기여하는 것이다.',cat:'사업 단계',track:'work'},
+  {id:'c33',es:'resultado esperado',ko:'기대성과',ex:'Definimos tres resultados esperados para el proyecto.',exKo:'본 사업의 기대성과 3개를 정의했다.',cat:'사업 단계',track:'work'},
+  {id:'c34',es:'indicador',ko:'지표',ex:'Cada resultado tiene al menos un indicador medible.',exKo:'각 성과는 측정 가능한 지표를 최소 1개 보유한다.',cat:'사업 단계',track:'work'},
+  {id:'c35',es:'línea de base',ko:'기초선',ex:'La línea de base se levantará en el primer trimestre.',exKo:'기초선은 1분기 내 조사한다.',cat:'사업 단계',track:'work'},
+  {id:'c36',es:'ejecución del proyecto',ko:'사업 시행',ex:'La ejecución del proyecto inicia tras la firma del convenio.',exKo:'사업 시행은 협약 체결 이후 시작된다.',cat:'사업 단계',track:'work'},
+  {id:'c37',es:'desembolso',ko:'집행 (지출)',ex:'El primer desembolso se realizó en marzo.',exKo:'첫 집행은 3월에 이루어졌다.',cat:'사업 단계',track:'work'},
+  {id:'c38',es:'informe de avance',ko:'진척보고서',ex:'El informe de avance se presenta cada trimestre.',exKo:'진척보고서는 분기마다 제출한다.',cat:'사업 단계',track:'work'},
+  {id:'c39',es:'evaluación final',ko:'종료평가',ex:'La evaluación final aplicará los criterios CAD-OCDE.',exKo:'종료평가는 OECD DAC 기준을 적용한다.',cat:'사업 단계',track:'work'},
+  {id:'c40',es:'sostenibilidad',ko:'지속가능성',ex:'La sostenibilidad es un riesgo moderado del proyecto.',exKo:'지속가능성은 본 사업의 중간 위험 요소이다.',cat:'사업 단계',track:'work'},
+
+  // 행정·재무 (10)
+  {id:'c41',es:'convenio',ko:'협약',ex:'El convenio se firmará el próximo mes.',exKo:'협약은 다음 달에 서명된다.',cat:'행정·재무',track:'work'},
+  {id:'c42',es:'memorando de entendimiento (MoU)',ko:'양해각서',ex:'Firmamos un MoU para la cooperación científica.',exKo:'과학협력을 위한 양해각서를 체결했다.',cat:'행정·재무',track:'work'},
+  {id:'c43',es:'canje de notas',ko:'공한교환',ex:'El canje de notas formaliza el inicio del proyecto.',exKo:'공한교환으로 사업 개시가 공식화된다.',cat:'행정·재무',track:'work'},
+  {id:'c44',es:'términos de referencia (TdR)',ko:'과업지시서',ex:'Los TdR definen el alcance de la consultoría.',exKo:'과업지시서는 컨설팅의 범위를 정의한다.',cat:'행정·재무',track:'work'},
+  {id:'c45',es:'licitación pública',ko:'공개입찰',ex:'La licitación pública se realiza a través del portal institucional.',exKo:'공개입찰은 기관 포털을 통해 진행된다.',cat:'행정·재무',track:'work'},
+  {id:'c46',es:'adjudicación',ko:'낙찰·계약체결',ex:'La adjudicación recayó en una empresa coreana-local.',exKo:'낙찰은 한국-현지 합작 기업에 돌아갔다.',cat:'행정·재무',track:'work'},
+  {id:'c47',es:'contrapartida',ko:'대응자금',ex:'El Gobierno aportará la contrapartida nacional.',exKo:'정부가 국가 대응자금을 부담한다.',cat:'행정·재무',track:'work'},
+  {id:'c48',es:'exención arancelaria',ko:'관세면제',ex:'La exención arancelaria fue tramitada por la Cancillería.',exKo:'관세면제는 외교부가 처리했다.',cat:'행정·재무',track:'work'},
+  {id:'c49',es:'no objeción',ko:'이의없음 (승인)',ex:'Esperamos la no objeción de la sede para proceder.',exKo:'진행을 위해 본부 이의없음을 기다리고 있다.',cat:'행정·재무',track:'work'},
+  {id:'c50',es:'dictamen jurídico',ko:'법률 검토의견',ex:'Antes de firmar requerimos el dictamen jurídico.',exKo:'서명 전 법률 검토의견이 필요하다.',cat:'행정·재무',track:'work'},
+
+  // 분야별 (10)
+  {id:'c51',es:'atención primaria de salud',ko:'1차의료',ex:'El proyecto fortalece la atención primaria de salud rural.',exKo:'본 사업은 농촌 1차의료를 강화한다.',cat:'분야별',track:'work'},
+  {id:'c52',es:'cobertura sanitaria universal',ko:'보편적의료보장',ex:'La cobertura sanitaria universal es un objetivo nacional.',exKo:'보편적의료보장은 국가적 목표이다.',cat:'분야별',track:'work'},
+  {id:'c53',es:'educación técnica y profesional',ko:'기술직업교육',ex:'Apoyamos la educación técnica en cinco institutos.',exKo:'5개 기관의 기술교육을 지원한다.',cat:'분야별',track:'work'},
+  {id:'c54',es:'capacitación docente',ko:'교사연수',ex:'La capacitación docente es el componente principal.',exKo:'교사연수가 주된 구성요소이다.',cat:'분야별',track:'work'},
+  {id:'c55',es:'seguridad alimentaria',ko:'식량안보',ex:'El proyecto contribuye a la seguridad alimentaria de comunidades indígenas.',exKo:'본 사업은 선주민 공동체의 식량안보에 기여한다.',cat:'분야별',track:'work'},
+  {id:'c56',es:'cadena de valor',ko:'가치사슬',ex:'Fortalecemos la cadena de valor del cacao.',exKo:'카카오 가치사슬을 강화한다.',cat:'분야별',track:'work'},
+  {id:'c57',es:'agua potable y saneamiento',ko:'식수·위생',ex:'El proyecto amplía el acceso a agua potable y saneamiento.',exKo:'본 사업은 식수·위생 접근성을 확대한다.',cat:'분야별',track:'work'},
+  {id:'c58',es:'energías renovables',ko:'재생에너지',ex:'Instalamos sistemas solares en escuelas rurales.',exKo:'농촌 학교에 태양광 시스템을 설치한다.',cat:'분야별',track:'work'},
+  {id:'c59',es:'cambio climático',ko:'기후변화',ex:'La adaptación al cambio climático es prioridad regional.',exKo:'기후변화 적응은 지역 우선과제이다.',cat:'분야별',track:'work'},
+  {id:'c60',es:'igualdad de género',ko:'양성평등',ex:'Todos los indicadores se desagregan por género.',exKo:'모든 지표는 성별로 세분화한다.',cat:'분야별',track:'work'},
+
+  // 외교·격식 (10)
+  {id:'c61',es:'embajada',ko:'대사관',ex:'La Embajada de Corea coordina la cooperación bilateral.',exKo:'한국 대사관이 양자 협력을 조율한다.',cat:'외교 격식',track:'work'},
+  {id:'c62',es:'nota verbal',ko:'외교공한',ex:'Daremos curso al tema mediante nota verbal.',exKo:'외교공한으로 사안을 처리하겠다.',cat:'외교 격식',track:'work'},
+  {id:'c63',es:'cumbre',ko:'정상회담',ex:'La cumbre se celebrará en Lima en noviembre.',exKo:'정상회담은 11월 리마에서 개최된다.',cat:'외교 격식',track:'work'},
+  {id:'c64',es:'comunicado',ko:'공식발표',ex:'El comunicado oficial será publicado mañana.',exKo:'공식발표문은 내일 공개된다.',cat:'외교 격식',track:'work'},
+  {id:'c65',es:'otorgar',ko:'수여하다·부여하다',ex:'El Ministerio otorgó la condecoración al equipo.',exKo:'부처는 팀에게 훈장을 수여했다.',cat:'외교 격식',track:'work'},
+  {id:'c66',es:'suscribir',ko:'서명·체결하다',ex:'Las partes suscribieron el convenio en una ceremonia oficial.',exKo:'양 당사자는 공식 의식에서 협약을 체결했다.',cat:'외교 격식',track:'work'},
+  {id:'c67',es:'ratificar',ko:'비준하다',ex:'El Congreso ratificó el tratado el mes pasado.',exKo:'국회는 지난달 조약을 비준했다.',cat:'외교 격식',track:'work'},
+  {id:'c68',es:'manifestar',ko:'표명하다',ex:'El Embajador manifestó su apoyo a la iniciativa.',exKo:'대사는 이니셔티브에 대한 지지를 표명했다.',cat:'외교 격식',track:'work'},
+  {id:'c69',es:'dar curso a',ko:'(사안을) 처리하다',ex:'Daremos curso al tema esta misma semana.',exKo:'이번 주 안으로 사안을 처리하겠다.',cat:'외교 격식',track:'work'},
+  {id:'c70',es:'quedar atento a',ko:'기다리다 (격식)',ex:'Quedamos atentos a sus indicaciones.',exKo:'지시를 기다리겠습니다.',cat:'외교 격식',track:'work'},
+
+  // FLEX 빈출 (10)
+  {id:'c71',es:'abordar',ko:'다루다·착수하다',ex:'Es momento de abordar las debilidades del sistema.',exKo:'시스템의 약점을 다룰 때이다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c72',es:'impulsar',ko:'추동·촉진하다',ex:'El Gobierno busca impulsar la transición energética.',exKo:'정부는 에너지 전환을 추진하려 한다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c73',es:'fomentar',ko:'장려하다',ex:'Las políticas fomentan la igualdad de oportunidades.',exKo:'이러한 정책은 기회 균등을 장려한다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c74',es:'brecha',ko:'격차',ex:'La brecha digital sigue siendo enorme en zonas rurales.',exKo:'농촌 지역의 디지털 격차는 여전히 막대하다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c75',es:'desafío',ko:'과제·도전',ex:'El cambio climático es el mayor desafío de la región.',exKo:'기후변화는 이 지역 최대의 과제이다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c76',es:'avance',ko:'진전',ex:'El informe destaca avances en cobertura educativa.',exKo:'보고서는 교육 보급률의 진전을 강조한다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c77',es:'retroceso',ko:'후퇴',ex:'La pandemia generó un retroceso en indicadores sociales.',exKo:'팬데믹은 사회지표의 후퇴를 야기했다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c78',es:'enfoque',ko:'접근방식',ex:'Adoptamos un enfoque integral del problema.',exKo:'문제에 대한 통합적 접근을 채택한다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c79',es:'logro',ko:'성과',ex:'El logro más visible es la reducción de la mortalidad infantil.',exKo:'가장 가시적인 성과는 영아사망률 감소이다.',cat:'FLEX 빈출',track:'flex'},
+  {id:'c80',es:'en el marco de',ko:'~의 일환으로',ex:'En el marco de la cooperación bilateral, se firmó un nuevo acuerdo.',exKo:'양자 협력의 일환으로 새 협정이 체결되었다.',cat:'FLEX 빈출',track:'flex'},
+];
+
+const QUIZZES = [
+  // Subjuntivo (10)
+  {id:'q01',cat:'접속법',track:'flex',q:'Es necesario que ustedes _____ el informe antes del viernes.',op:['presentan','presenten','presentaron','presentar'],a:1,exp:'"Es necesario que" 는 접속법을 요구합니다 (필요·당위).'},
+  {id:'q02',cat:'접속법',track:'flex',q:'Cuando _____ este proyecto, tomaré vacaciones.',op:['termino','termine','terminaré','terminé'],a:1,exp:'미래 시점의 "cuando + 종속절"은 접속법.'},
+  {id:'q03',cat:'접속법',track:'flex',q:'No creo que ellos _____ toda la verdad.',op:['saben','sepan','sabrán','sabían'],a:1,exp:'"No creer que" 는 의심·부정 → 접속법.'},
+  {id:'q04',cat:'접속법',track:'flex',q:'Quiero _____ al congreso de la próxima semana.',op:['voy','vaya','ir','iré'],a:2,exp:'주절·종속절 주어가 같으면 que가 아닌 부정사 사용.'},
+  {id:'q05',cat:'접속법',track:'flex',q:'Te aviso en cuanto _____ novedades.',op:['hay','haya','había','habrá'],a:1,exp:'미래 시점 "en cuanto + 절" 은 접속법.'},
+  {id:'q06',cat:'접속법',track:'flex',q:'Es evidente que el plan _____ algunas debilidades.',op:['tiene','tenga','tendría','tener'],a:0,exp:'"Es evidente que" 는 확신 표현 → 직설법.'},
+  {id:'q07',cat:'접속법',track:'flex',q:'El director quiere que la Subdirectora _____ la reunión.',op:['preside','presida','presidirá','presidir'],a:1,exp:'"querer que + 다른 주어" → 접속법.'},
+  {id:'q08',cat:'접속법',track:'flex',q:'Espero que la misión _____ bien.',op:['sale','salga','saldrá','salir'],a:1,exp:'"esperar que + 다른 주어" → 접속법.'},
+  {id:'q09',cat:'접속법',track:'flex',q:'Aunque no me lo _____, no le voy a creer.',op:['digas','dices','dirás','diciendo'],a:0,exp:'양보 가정 "aunque + 접속법" = 설령 ~한다 해도.'},
+  {id:'q10',cat:'접속법',track:'flex',q:'Te llamo siempre cuando _____ a casa.',op:['llegue','llego','llegaré','llegar'],a:1,exp:'습관·반복 "cuando" 는 직설법.'},
+
+  // Por/Para, Ser/Estar (8)
+  {id:'q11',cat:'전치사·동사',track:'flex',q:'La firma del convenio se realizó _____ videoconferencia.',op:['por','para','de','en'],a:0,exp:'수단·방법은 por.'},
+  {id:'q12',cat:'전치사·동사',track:'flex',q:'Este informe es _____ el lunes.',op:['por','para','de','en'],a:1,exp:'기한(deadline)은 para.'},
+  {id:'q13',cat:'전치사·동사',track:'flex',q:'La reunión _____ a las tres.',op:['es','está','será allá','estuvo'],a:0,exp:'시간·장소(이벤트)는 ser.'},
+  {id:'q14',cat:'전치사·동사',track:'flex',q:'La Oficina _____ cerca del Ministerio.',op:['es','está','sea','siendo'],a:1,exp:'위치는 estar.'},
+  {id:'q15',cat:'전치사·동사',track:'flex',q:'La cooperación coreana _____ reconocida internacionalmente.',op:['es','está','son','están'],a:0,exp:'본질·정체성을 묘사할 때 ser.'},
+  {id:'q16',cat:'전치사·동사',track:'flex',q:'Lo hicieron _____ ayudarnos.',op:['por','para','de','con'],a:1,exp:'목적은 para.'},
+  {id:'q17',cat:'전치사·동사',track:'flex',q:'El proyecto _____ en fase de cierre.',op:['es','está','siendo','sea'],a:1,exp:'일시적 상태·단계는 estar.'},
+  {id:'q18',cat:'전치사·동사',track:'flex',q:'Trabajamos aquí _____ tres años.',op:['por','desde hace','hasta','para'],a:1,exp:'기간(과거~현재 지속)은 desde hace.'},
+
+  // Conectores (6)
+  {id:'q19',cat:'접속사·연결어',track:'flex',q:'Llegamos tarde, _____ había mucho tráfico.',op:['sin embargo','ya que','aunque','pese a'],a:1,exp:'이유 → ya que / porque.'},
+  {id:'q20',cat:'접속사·연결어',track:'flex',q:'_____ el riesgo, decidimos continuar.',op:['Pese a','Por lo que','Cuando','Si'],a:0,exp:'양보 → pese a / a pesar de.'},
+  {id:'q21',cat:'접속사·연결어',track:'flex',q:'Se fue _____ despedirse.',op:['sin','sino','si no','aunque'],a:0,exp:'"~없이" → sin + 부정사.'},
+  {id:'q22',cat:'접속사·연결어',track:'flex',q:'No es coreano _____ chino.',op:['pero','sino','si no','sin embargo'],a:1,exp:'부정문 후 대조 → sino.'},
+  {id:'q23',cat:'접속사·연결어',track:'flex',q:'_____, el balance es positivo.',op:['En definitiva','Por ejemplo','Por otra parte','Asimismo'],a:0,exp:'요약·결론 → en definitiva.'},
+  {id:'q24',cat:'접속사·연결어',track:'flex',q:'Trabajamos en equipo, _____ cada uno tiene sus tareas.',op:['sin embargo','además','por tanto','así que'],a:0,exp:'대조 → sin embargo.'},
+
+  // Vocab ODA (10)
+  {id:'q25',cat:'ODA 어휘',track:'work',q:'La _____ es el principal mecanismo de transferencia no reembolsable.',op:['donación','préstamo','inversión','comisión'],a:0,exp:'무상이전 = donación.'},
+  {id:'q26',cat:'ODA 어휘',track:'work',q:'El estudio _____ se realiza antes de formular el proyecto.',op:['de planificación','de impacto','preliminar','de cierre'],a:2,exp:'발굴 단계 = estudio preliminar.'},
+  {id:'q27',cat:'ODA 어휘',track:'work',q:'La _____ del Gobierno permite la sostenibilidad del proyecto.',op:['contrapartida','contraparte','contradicción','contraseña'],a:0,exp:'대응자금 = contrapartida (재원). Contraparte는 카운터파트(사람·기관).'},
+  {id:'q28',cat:'ODA 어휘',track:'work',q:'KOICA es la agencia _____ de la cooperación coreana.',op:['ejecutora','judicial','legislativa','financiera'],a:0,exp:'시행기관 = agencia ejecutora.'},
+  {id:'q29',cat:'ODA 어휘',track:'work',q:'La _____ exime del pago de impuestos a los bienes importados.',op:['exención arancelaria','inmunidad diplomática','donación financiera','no objeción'],a:0,exp:'관세면제 = exención arancelaria.'},
+  {id:'q30',cat:'ODA 어휘',track:'work',q:'Antes de adjudicar el contrato, se realiza una _____ pública.',op:['licitación','decisión','transferencia','reunión'],a:0,exp:'공개입찰 = licitación pública.'},
+  {id:'q31',cat:'ODA 어휘',track:'work',q:'La _____ del proyecto evalúa pertinencia, eficacia y sostenibilidad.',op:['evaluación','ejecución','identificación','firma'],a:0,exp:'평가 = evaluación.'},
+  {id:'q32',cat:'ODA 어휘',track:'work',q:'El _____ se reúne periódicamente para revisar avances.',op:['Comité de Pilotaje','contratista','gremio','sindicato'],a:0,exp:'운영위 = Comité de Pilotaje.'},
+  {id:'q33',cat:'ODA 어휘',track:'work',q:'Los _____ son los principales criterios de evaluación.',op:['acuerdos comerciales','criterios CAD-OCDE','medios financieros','tipos de cambio'],a:1,exp:'OECD DAC 평가기준 6가지.'},
+  {id:'q34',cat:'ODA 어휘',track:'work',q:'La _____ asegura que los efectos perduren tras el cierre.',op:['sostenibilidad','sustentación','sustancia','consultoría'],a:0,exp:'지속가능성 = sostenibilidad.'},
+
+  // KOICA context (8)
+  {id:'q35',cat:'KOICA 직무',track:'work',q:'Como _____, presido las reuniones cuando el Director está ausente.',op:['Subdirectora','Embajadora','Cónsul','Consultora'],a:0,exp:'사무소장 부재시 부소장이 주재.'},
+  {id:'q36',cat:'KOICA 직무',track:'work',q:'El _____ define la estrategia de cooperación con un país socio.',op:['PCD','MML','MoU','POA'],a:0,exp:'국별협력전략 = Plan de Cooperación al Desarrollo.'},
+  {id:'q37',cat:'KOICA 직무',track:'work',q:'Doy seguimiento a tres proyectos del sector salud. Soy _____.',op:['Embajador','Gestor de Proyectos','Cónsul','Auditor'],a:1,exp:'사업담당자가 사업 후속관리.'},
+  {id:'q38',cat:'KOICA 직무',track:'work',q:'La _____ es la sede diplomática que coordina relaciones bilaterales.',op:['Embajada','Oficina','Cancillería local','Sede de KOICA'],a:0,exp:'대사관 = Embajada (Cancillería는 주재국 외교부).'},
+  {id:'q39',cat:'KOICA 직무',track:'work',q:'Antes de proceder con la enmienda, esperamos la _____ de la sede.',op:['no objeción','objeción','aprobación popular','firma final'],a:0,exp:'본부 이의없음 = no objeción.'},
+  {id:'q40',cat:'KOICA 직무',track:'work',q:'La sede ha solicitado el _____ correspondiente al primer trimestre.',op:['informe trimestral','acta de cierre','plan operativo anual','dictamen jurídico'],a:0,exp:'분기 보고서 = informe trimestral.'},
+  {id:'q41',cat:'KOICA 직무',track:'work',q:'Los _____ se contratan localmente y son clave para la operación.',op:['asistentes locales','embajadores','consultores internacionales','voluntarios extranjeros'],a:0,exp:'현지직원 = asistentes/personal local.'},
+  {id:'q42',cat:'KOICA 직무',track:'work',q:'El programa _____ envía profesionales coreanos al exterior.',op:['World Friends Korea','UNESCO','UNICEF','EDCF'],a:0,exp:'WFK = 한국 해외봉사단.'},
+
+  // Comprensión (8)
+  {id:'q43',cat:'독해',track:'flex',q:'"El acuerdo, firmado el lunes, contempla 80 millones de dólares para infraestructura resiliente." ¿Qué se firmó el lunes?',op:['un préstamo bancario','un acuerdo de 80 millones para infraestructura','la entrega del proyecto','un comunicado político'],a:1,exp:'본문에 명시된 협정 내용.'},
+  {id:'q44',cat:'독해',track:'flex',q:'"Pese a las demoras, el proyecto avanza según lo previsto." ¿Qué significa?',op:['El proyecto está paralizado','Hay demoras pero el proyecto sigue su curso','El proyecto se canceló','Las demoras impiden el avance'],a:1,exp:'pese a = ~에도 불구하고 (양보).'},
+  {id:'q45',cat:'독해',track:'flex',q:'"La Subdirectora preside la reunión en ausencia del Director." ¿Por qué preside?',op:['Tiene más experiencia','El Director no está','El Embajador lo pidió','Es la organizadora'],a:1,exp:'en ausencia de = ~의 부재시.'},
+  {id:'q46',cat:'독해',track:'flex',q:'"Solicitamos formalmente la no objeción de la sede para enmendar el cronograma." ¿Qué se pide?',op:['cancelar el proyecto','cambiar el cronograma con autorización','reemplazar al Director','firmar un nuevo convenio'],a:1,exp:'no objeción = 이의없음 (승인).'},
+  {id:'q47',cat:'독해',track:'flex',q:'"El proyecto cumplió el 87% de las metas, con retrasos en el componente de equipamiento." ¿Cuál es el área con problemas?',op:['la capacitación','la ejecución general','el equipamiento','la evaluación'],a:2,exp:'componente de equipamiento에 지연.'},
+  {id:'q48',cat:'독해',track:'flex',q:'"El cambio de gobierno previsto en 2026 representa un riesgo alto." ¿Qué tipo de riesgo?',op:['económico','ambiental','político','técnico'],a:2,exp:'정권교체 = 정치적 위험.'},
+  {id:'q49',cat:'독해',track:'flex',q:'"La cooperación coreana no se limita a la transferencia de recursos: aporta también conocimiento técnico." Según el texto, la cooperación coreana:',op:['sólo transfiere dinero','sólo transfiere conocimiento','transfiere recursos y conocimiento','no transfiere nada'],a:2,exp:'no se limita a = ~에 그치지 않다.'},
+  {id:'q50',cat:'독해',track:'flex',q:'"Es indispensable que los indicadores estén desagregados por sexo, conforme a la política de KOICA." ¿Qué se exige?',op:['que los indicadores incluyan datos separados por género','que los indicadores sean confidenciales','que los indicadores se publiquen anualmente','que los indicadores sean cuantitativos'],a:0,exp:'desagregado por sexo = 성별 세분화.'},
+];
+
+const PASSAGES = [
+  {
+    id:'p1', cat:'사회·경제 (CEPAL)', track:'flex',
+    title:'América Latina: la década perdida del desarrollo social',
+    body:[
+      'América Latina y el Caribe atraviesa una década perdida en términos de desarrollo social. Según el último informe de la Comisión Económica para América Latina y el Caribe (CEPAL), la pobreza extrema en la región alcanzó al 13,1% de la población en 2024, una cifra similar a la registrada hace quince años.',
+      'Este retroceso no se explica únicamente por la pandemia, sino también por la desaceleración económica estructural, la inflación persistente y la insuficiente capacidad fiscal de muchos Estados para sostener políticas redistributivas.',
+      'La región sigue siendo, según el propio organismo, la más desigual del mundo en términos de distribución del ingreso. Las brechas no se manifiestan únicamente en el ingreso: persisten en el acceso a salud, educación y conectividad digital, especialmente en zonas rurales y comunidades indígenas.',
+      'La CEPAL recomienda fortalecer los sistemas de protección social, ampliar la base tributaria con criterios de progresividad, y orientar la inversión pública hacia sectores generadores de empleo de calidad. Sin un pacto social renovado, advierte, ninguna medida será suficiente.'
+    ],
+    questions:[
+      {q:'¿Qué porcentaje de pobreza extrema registró la región en 2024?',op:['8,5%','13,1%','20%','5%'],a:1,exp:'본문에 명시된 수치.'},
+      {q:'Según el texto, ¿qué NO es causa del retroceso?',op:['la pandemia','la desaceleración económica','la corrupción del sector privado','la insuficiente capacidad fiscal'],a:2,exp:'민간 부패는 언급되지 않음.'},
+      {q:'¿Cómo describe el texto a América Latina?',op:['la región menos desigual','la más desigual del mundo en distribución del ingreso','una región sin brechas','similar a Europa'],a:1,exp:'직접 언급.'},
+      {q:'"Pacto social renovado" implica:',op:['medidas técnicas exclusivamente','consenso amplio para la reforma','retorno al pasado','privatización total'],a:1,exp:'합의·재정렬을 의미.'}
+    ]
+  },
+  {
+    id:'p2', cat:'개발협력 (KOICA·BID)', track:'flex',
+    title:'KOICA y BID firman acuerdo de cofinanciamiento',
+    body:[
+      'KOICA y el Banco Interamericano de Desarrollo (BID) suscribieron un nuevo acuerdo de cofinanciamiento por 80 millones de dólares destinado a proyectos de infraestructura resiliente al clima en países del Triángulo Norte de Centroamérica.',
+      'Los recursos se canalizarán hacia tres líneas de acción: el fortalecimiento de sistemas de alerta temprana ante eventos climáticos extremos, la rehabilitación de infraestructura vial dañada por desastres naturales, y la modernización de los servicios de agua potable en municipios vulnerables.',
+      'El director regional del BID destacó que la cooperación coreana no se limita a la transferencia de recursos, sino que aporta conocimiento técnico de alto nivel, particularmente en gestión de desastres. La representante de KOICA subrayó que la modalidad de cofinanciamiento permite multiplicar el impacto y facilita la apropiación nacional.',
+      'Expertos consultados advierten que el éxito dependerá de la capacidad institucional local y de la continuidad política entre administraciones. "Sin un compromiso de Estado que trascienda los ciclos electorales, el riesgo es real", señalaron.'
+    ],
+    questions:[
+      {q:'¿Cuál es el monto del acuerdo?',op:['8 millones','80 millones','800 millones','no se especifica'],a:1,exp:'본문 첫 단락.'},
+      {q:'¿Cuál NO es una de las tres líneas de acción?',op:['alerta temprana','infraestructura vial','agua potable','educación universitaria'],a:3,exp:'대학교육은 언급 없음.'},
+      {q:'Según el director del BID, la cooperación coreana se distingue por:',op:['ser exclusivamente financiera','combinar recursos con conocimiento técnico','reemplazar al gobierno local','imponer condiciones rígidas'],a:1,exp:'직접 언급.'},
+      {q:'La advertencia principal de los expertos es:',op:['el monto es excesivo','el éxito depende de capacidad institucional y continuidad política','el BID no debería involucrarse','la cooperación coreana es poco fiable'],a:1,exp:'마지막 단락.'}
+    ]
+  },
+  {
+    id:'p3', cat:'거버넌스', track:'flex',
+    title:'La lucha contra la corrupción en América Latina',
+    body:[
+      'La lucha contra la corrupción en América Latina ha avanzado, pero los resultados distan de ser homogéneos. Si bien algunos países han logrado fortalecer sus marcos legales y crear fiscalías especializadas, los avances institucionales no siempre se traducen en sentencias firmes.',
+      'Una paradoja interesante: en varios países donde se han llevado adelante operaciones judiciales de gran calado, la confianza en las instituciones ha caído, no aumentado. Los ciudadanos no celebran que se descubra el problema; concluyen que es mucho mayor de lo que imaginaban.',
+      'La evidencia comparada sugiere que las estrategias punitivas no son suficientes. Los países con menores niveles de corrupción combinan persecución penal con reformas administrativas profundas: profesionalización del servicio civil, transparencia activa, digitalización de trámites, contratación pública abierta.',
+      'La cooperación internacional puede contribuir más allá del financiamiento, acompañando reformas técnicas que rara vez generan titulares pero transforman la administración cotidiana. Combatir la corrupción exige firmeza penal sin sustituir el trabajo paciente de reforma.'
+    ],
+    questions:[
+      {q:'¿Cuál es la paradoja mencionada?',op:['más operaciones judiciales aumentan la confianza','grandes operaciones pueden disminuir la confianza','no hay relación entre justicia y confianza','la corrupción ha desaparecido'],a:1,exp:'두 번째 단락.'},
+      {q:'¿Qué NO es una de las reformas administrativas?',op:['profesionalización del servicio civil','transparencia activa','aumento del gasto militar','contratación pública abierta'],a:2,exp:'군비 증액은 언급 없음.'},
+      {q:'El papel de la cooperación internacional según el autor es:',op:['solo financiar campañas','reemplazar a las instituciones','acompañar reformas técnicas','retirarse del tema'],a:2,exp:'네 번째 단락.'},
+      {q:'La conclusión central es:',op:['solo el castigo penal funciona','corrupción es inevitable','combinar firmeza penal con reformas','los donantes deben retirarse'],a:2,exp:'마지막 문장.'}
+    ]
+  },
+  {
+    id:'p4', cat:'환경 (Amazonía)', track:'flex',
+    title:'La Amazonía y el ciclo del carbono',
+    body:[
+      'Durante décadas, la selva amazónica fue concebida como un gran sumidero de carbono: un sistema natural capaz de absorber enormes cantidades de CO₂ y mitigar el calentamiento global. Sin embargo, estudios recientes obligan a matizar esa imagen.',
+      'Investigaciones realizadas con torres de medición han mostrado que algunas zonas, especialmente al sur y al este de la cuenca, ya emiten más carbono del que capturan. La causa: deforestación, incendios provocados, y degradación silenciosa de los bosques.',
+      'A esto se suma un fenómeno más sutil: la propia capacidad fotosintética de la selva está disminuyendo debido al estrés hídrico y al aumento de temperaturas. La Amazonía está perdiendo eficiencia como mecanismo regulador del clima global.',
+      'Los expertos coinciden en tres líneas de acción: detener la deforestación (no sólo reducirla), restaurar áreas degradadas, y reconocer y proteger los territorios indígenas, que se han demostrado considerablemente más resistentes a la pérdida de cobertura forestal.'
+    ],
+    questions:[
+      {q:'La imagen tradicional de la Amazonía era:',op:['fuente de emisiones','sumidero de carbono','desierto verde','región sin estudios'],a:1,exp:'첫 단락.'},
+      {q:'¿Qué zonas emiten más de lo que capturan?',op:['norte y oeste','sur y este','centro','toda la cuenca'],a:1,exp:'두 번째 단락.'},
+      {q:'¿Cuál NO es una causa mencionada?',op:['deforestación','incendios provocados','minería ilegal','degradación silenciosa'],a:2,exp:'광업은 본문에 없음.'},
+      {q:'¿Cuál NO es una línea de acción propuesta?',op:['detener la deforestación','restaurar áreas degradadas','reubicar a comunidades indígenas','proteger territorios indígenas'],a:2,exp:'선주민 이주는 반대 — 영토 보호가 권고됨.'}
+    ]
+  }
+];
+
+const SCENARIOS = [
+  {
+    id:'s1', cat:'예비조사', title:'Misión de identificación — Sector salud Perú',
+    context:'사업담당자(GP, 본인)가 본부 미션단을 동행해 페루 보건부 차관실을 방문하는 첫 미팅.',
+    turns:[
+      {speaker:'GP', name:'사업담당자', es:'Doctora Ramírez, muchas gracias por recibirnos. Soy Kim Minjun, Gestor de Proyectos de la Oficina de KOICA en Lima.', ko:'라미레스 박사님, 환대해주셔서 감사합니다. KOICA 리마사무소 사업담당자 김민준입니다.'},
+      {speaker:'CP', name:'카운터파트', es:'Bienvenidos al Perú. Es un honor recibir a la delegación coreana.', ko:'페루에 오신 것을 환영합니다. 한국 대표단을 모시게 되어 영광입니다.'},
+      {speaker:'GP', name:'사업담당자', es:'Esta misión se inscribe en la fase de identificación del nuevo proyecto del sector salud, prioridad acordada en el Plan de Cooperación al Desarrollo 2024-2028.', ko:'본 미션은 보건분야 신규사업 발굴단계이며, 한·페루 PCD 2024-2028 우선순위 분야입니다.'},
+      {speaker:'CP', name:'카운터파트', es:'Tenemos algunas inquietudes sobre la cobertura geográfica. ¿Podríamos abordarlas?', ko:'지리적 범위에 대한 우려가 있는데 다뤄볼까요?'},
+      {speaker:'GP', name:'사업담당자', es:'Por supuesto. Recomendamos priorizar Puno por los indicadores de mortalidad materno-infantil y la presencia consolidada de otros donantes. La decisión final, claro está, es conjunta.', ko:'물론입니다. 모자보건 지표와 타 공여기관 시너지를 고려해 푸노를 우선 권합니다. 최종 결정은 공동입니다.'},
+      {speaker:'CP', name:'카운터파트', es:'¿Han previsto algún mecanismo de coordinación con otros donantes en terreno?', ko:'타 공여기관과의 협력 메커니즘은 있나요?'},
+      {speaker:'GP', name:'사업담당자', es:'Sí. Mantenemos contacto regular con BID, AECID y la Cooperación Suiza. Propondríamos formalizar una mesa de donantes en salud liderada por el Viceministerio.', ko:'네. BID·AECID·스위스개발협력청과 정기 접촉합니다. 차관실 주관 보건분야 공여기관 협의체를 제안하겠습니다.'},
+      {speaker:'GP', name:'사업담당자', es:'Para cualquier coordinación adicional, mi correo institucional está en su poder. Estaremos en contacto permanente.', ko:'추가 조율은 제 공식 메일로 부탁드립니다. 지속적으로 연락드리겠습니다.'}
+    ]
+  },
+  {
+    id:'s2', cat:'기획조사', title:'Revisión de la Matriz de Marco Lógico — Educación Colombia',
+    context:'사업담당자(GP)가 콜롬비아 교육부 국장과 논리모형(MML) 검토 회의를 직접 주재.',
+    turns:[
+      {speaker:'GP', name:'사업담당자', es:'Doctor Vargas, traigo la versión 2 de la Matriz de Marco Lógico, que incorpora los comentarios de su equipo.', ko:'바르가스 박사님, 의견을 반영한 논리모형 2판을 가져왔습니다.'},
+      {speaker:'CP', name:'카운터파트', es:'Le agradezco la rapidez. Comencemos por el propósito.', ko:'신속히 응해주셔서 감사합니다. 목적부터 시작하시죠.'},
+      {speaker:'GP', name:'사업담당자', es:'Hemos ajustado el enfoque para incluir los sectores productivos prioritarios: agroindustria y energías renovables.', ko:'우선분야인 농산업·재생에너지를 명시하도록 초점을 조정했습니다.'},
+      {speaker:'CP', name:'카운터파트', es:'¿Podríamos añadir "con enfoque de género e inclusión social"? Es directriz de la Ministra.', ko:'"젠더·사회포용 관점" 추가 가능할까요? 장관 지침입니다.'},
+      {speaker:'GP', name:'사업담당자', es:'Tomo nota. Lo incorporaré en el cierre y se lo confirmaré por escrito mañana.', ko:'메모하겠습니다. 마무리에 반영해 내일 서면 확인드리겠습니다.'},
+      {speaker:'CP', name:'카운터파트', es:'¿Han considerado el riesgo de cambio de gobierno en 2026?', ko:'2026년 정권교체 위험은 고려했나요?'},
+      {speaker:'GP', name:'사업담당자', es:'Sí, riesgo alto. Como medida de mitigación proponemos la firma de un convenio interinstitucional antes de fin de año.', ko:'고위험으로 식별. 경감조치는 연내 기관간협약 체결입니다.'},
+      {speaker:'GP', name:'사업담당자', es:'Cierro la versión 3 esta semana. Solicitaríamos su firma técnica en quince días para elevarla a la sede con su no objeción.', ko:'이번주 3판 마감, 15일 내 기술서명 후 본부에 이의없음 상신 요청드립니다.'}
+    ]
+  },
+  {
+    id:'s3', cat:'운영위원회', title:'Comité de Pilotaje — Subdirectora preside',
+    context:'부소장(SD, 본인)이 사무소장 부재로 도미니카 운영위 7차 회의를 주재.',
+    turns:[
+      {speaker:'SD', name:'부소장', es:'Damos por iniciada la séptima reunión del Comité de Pilotaje. He sido designada para presidir esta sesión y cuento con todas las facultades para acordar los puntos del orden del día.', ko:'7차 운영위 개시합니다. 위임받아 주재하며 의제 전반 결정 권한 보유합니다.'},
+      {speaker:'CP', name:'카운터파트', es:'Bienvenida, Subdirectora.', ko:'환영합니다, 부소장님.'},
+      {speaker:'SD', name:'부소장', es:'Hemos cumplido el 87% de las actividades. Los retrasos se concentran en el componente de equipamiento por demoras aduaneras.', ko:'87% 이행률, 장비분야 통관 지연이 주된 차질입니다.'},
+      {speaker:'CP', name:'카운터파트', es:'La exención arancelaria ya se tramitó. La Cancillería emitió la nota la semana pasada.', ko:'관세면제 처리 완료, 외교부가 지난주 공한 발행했습니다.'},
+      {speaker:'SD', name:'부소장', es:'Como Oficina, proponemos reprogramar el componente de equipamiento, sin alterar el plazo total. Esta enmienda requiere la no objeción de la sede.', ko:'사무소 입장으로 장비분야 일정 재계획 제안, 총 사업기간 유지. 본 수정은 본부 이의없음 필요합니다.'},
+      {speaker:'SD', name:'부소장', es:'Sobre la contrapartida nacional: registramos un cumplimiento del 40%. Comprendo el contexto, pero debo ser directa: si no se regulariza, abriría una alerta formal a la sede, lo que ninguna de las dos partes desea.', ko:'대응자금 이행률 40%. 맥락 이해하나 직설하겠습니다 — 정상화 안 되면 본부 공식 경보 사안, 양측 모두 원치 않을 일입니다.'},
+      {speaker:'CP', name:'카운터파트', es:'Aceptamos. Comprometo regularización en tres tramos: 30% este mes, 30% en mayo, saldo en junio.', ko:'수용합니다. 3분할 약정: 이달 30%, 5월 30%, 6월 잔액.'},
+      {speaker:'SD', name:'부소장', es:'Quedará registrado en el acta. Si hay cualquier desviación, escalaré directamente con el Viceministro.', ko:'의사록에 기재됩니다. 일탈 시 차관에게 직접 격상하겠습니다.'}
+    ]
+  },
+  {
+    id:'s4', cat:'현지직원 관리', title:'Coaching al equipo local',
+    context:'부소장(SD)이 현지직원에게 출장 행정 지시 + 본부 메일 오류에 대한 부드러운 코칭.',
+    turns:[
+      {speaker:'SD', name:'부소장', es:'Carolina, ¿tienes un momento? Quiero hablar de dos cosas. Empecemos por lo operativo.', ko:'카롤리나, 잠깐 시간 돼? 두 가지 — 운영 사안부터 시작하자.'},
+      {speaker:'LO', name:'현지직원', es:'Sí, claro, Subdirectora.', ko:'네, 부소장님.'},
+      {speaker:'SD', name:'부소장', es:'Necesito que coordines tres cosas: hotel, vuelos internos y vehículo con chofer. ¿Itinerario consolidado para el jueves?', ko:'세 가지 조율 부탁 — 호텔, 국내선, 차량+기사. 통합일정 목요일까지 가능?'},
+      {speaker:'LO', name:'현지직원', es:'Sin problema. Si pasa del límite de viáticos, ¿qué hago?', ko:'문제없습니다. 출장비 한도 초과면 어떻게 할까요?'},
+      {speaker:'SD', name:'부소장', es:'Avísame antes de confirmar. Ahora el segundo tema, más delicado: el correo que enviaste ayer a la sede confundió dos partidas presupuestarias.', ko:'확정 전 알려줘. 두 번째는 민감한 사안 — 어제 본부 메일에서 예산 두 항목이 뒤바뀌었어.'},
+      {speaker:'SD', name:'부소장', es:'Tranquila, no es un asunto disciplinario, es un asunto de proceso. Te propongo dos cosas: revisión rápida antes de enviar, y revisar juntas la guía la próxima semana.', ko:'괜찮아, 징계 아닌 프로세스 사안. 두 가지 제안 — 발송 전 빠른 리뷰, 다음주 가이드 함께 검토.'},
+      {speaker:'LO', name:'현지직원', es:'Le agradezco, Subdirectora. Lo tomo como aprendizaje.', ko:'감사합니다, 부소장님. 학습으로 받겠습니다.'},
+      {speaker:'SD', name:'부소장', es:'Sé que tu trabajo es excelente. Siempre prefiero que preguntes a que asumas.', ko:'일 잘하는 거 알아. 가정 말고 항상 물어주길.'}
+    ]
+  },
+  {
+    id:'s5', cat:'대사관 협의', title:'Reunión de coordinación con la Embajada',
+    context:'부소장(SD)이 사무소장(DR) 동행으로 한국 대사관 정기협의에 참석. 외교 격식.',
+    turns:[
+      {speaker:'EM', name:'대사관 참사관', es:'Buenos días, Director, Subdirectora. Bienvenidos nuevamente a la Embajada.', ko:'안녕하세요, 소장님, 부소장님. 환영합니다.'},
+      {speaker:'DR', name:'사무소장', es:'Hoy hemos venido la Subdirectora y yo porque hay puntos que ella maneja con mayor detalle.', ko:'오늘은 부소장이 더 세부 다루는 사안이 있어 함께 왔습니다.'},
+      {speaker:'SD', name:'부소장', es:'Con su permiso, Consejero. El proyecto se encuentra en su fase de cierre operativo. La transferencia formal está prevista para el 15 de junio.', ko:'발언권 청합니다, 참사관님. 사업은 운영 종료단계, 6/15 정식 인계 예정.'},
+      {speaker:'SD', name:'부소장', es:'Quisiéramos solicitar formalmente la presencia del Señor Embajador en la ceremonia, dado el peso simbólico del evento.', ko:'행사의 상징성을 고려해 인계식에 대사님 참석을 정식 요청드립니다.'},
+      {speaker:'EM', name:'대사관 참사관', es:'Lo veo viable. Le ruego nos haga llegar la invitación protocolar con al menos tres semanas de antelación.', ko:'가능해 보입니다. 최소 3주 전 의전초청장 송부 부탁드립니다.'},
+      {speaker:'DR', name:'사무소장', es:'Permítame retomar el segundo punto: el nuevo PCD 2026-2030. Proponemos priorizar gobernanza, transición energética y cooperación científico-tecnológica.', ko:'두 번째 사안 — 2026-2030 PCD. 거버넌스·에너지전환·과학기술협력 우선분야 제안.'},
+      {speaker:'EM', name:'대사관 참사관', es:'Coincidimos plenamente. Esa propuesta refleja la lectura política de la Embajada.', ko:'전적 동의. 대사관의 정치적 판독과도 일치합니다.'},
+      {speaker:'SD', name:'부소장', es:'Solicitamos formalmente el apoyo de la Embajada mediante una nota verbal sobre las dificultades de visados oficiales para nuestros consultores.', ko:'단기 컨설턴트 관용비자 발급 어려움에 대해 외교공한 통한 대사관 지원을 정식 요청드립니다.'},
+      {speaker:'EM', name:'대사관 참사관', es:'Daremos curso al tema mediante nota verbal y, de ser necesario, gestión a nivel de Embajador.', ko:'외교공한으로 처리하고, 필요시 대사 차원 교섭하겠습니다.'}
+    ]
+  }
+];
+
+// ============================================================
+// STATE + STORAGE
+// ============================================================
+
+const STORAGE_KEY = 'aula_es_v1';
+const SRS_INTERVALS_DAYS = [0, 1, 3, 7, 14, 30, 90]; // level → days
+
+const defaultProgress = () => ({
+  cards: {},      // id -> { level, lastSeen (ms), correctCount, wrongCount }
+  quizHistory: [],// [{ date, scope, score, total, byCategory }]
+  sessions: [],   // dates studied (yyyy-mm-dd)
+});
+
+let progress = defaultProgress();
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) progress = { ...defaultProgress(), ...JSON.parse(raw) };
+  } catch(e) { console.warn('load failed', e); }
+}
+let lastSavedAt = null;
+let autoSaveHandle = null;
+let autoSaveTimer = null;
+function saveProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    lastSavedAt = new Date();
+    updateSaveStatus();
+  } catch(e) { console.warn('save failed (storage may be restricted)', e); }
+  scheduleFileAutoSave();
+}
+function updateSaveStatus() {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  if (!lastSavedAt) { el.textContent = ''; return; }
+  const sec = Math.max(0, Math.floor((Date.now() - lastSavedAt.getTime()) / 1000));
+  let label;
+  if (sec < 5) label = '방금 저장됨 ✓';
+  else if (sec < 60) label = `${sec}초 전 저장됨 ✓`;
+  else if (sec < 3600) label = `${Math.floor(sec/60)}분 전 저장됨 ✓`;
+  else label = `${lastSavedAt.toTimeString().slice(0,5)} 저장됨`;
+  el.textContent = label;
+}
+setInterval(updateSaveStatus, 30000);
+async function toggleFileAutoSave() {
+  if (autoSaveHandle) {
+    autoSaveHandle = null;
+    document.getElementById('autosave-info').classList.add('hidden');
+    updateAutoSaveBtn();
+    return;
+  }
+  if (!('showSaveFilePicker' in window)) {
+    alert('이 브라우저는 파일 자동저장을 지원하지 않습니다 (Chrome/Edge에서 지원).\n대신 "지금 내보내기"를 주기적으로 사용하세요.');
+    return;
+  }
+  try {
+    autoSaveHandle = await window.showSaveFilePicker({
+      suggestedName: 'aula-progress.json',
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    });
+    await writeAutoSaveFile();
+    updateAutoSaveBtn();
+    const info = document.getElementById('autosave-info');
+    info.classList.remove('hidden');
+    info.textContent = `✅ 파일 자동저장 활성: ${autoSaveHandle.name}`;
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('파일 선택 실패: ' + e.message);
+  }
+}
+async function writeAutoSaveFile() {
+  if (!autoSaveHandle) return;
+  try {
+    const w = await autoSaveHandle.createWritable();
+    await w.write(JSON.stringify(progress, null, 2));
+    await w.close();
+  } catch(e) { console.warn('auto-save file failed', e); }
+}
+function scheduleFileAutoSave() {
+  if (!autoSaveHandle) return;
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => writeAutoSaveFile(), 500);
+}
+function updateAutoSaveBtn() {
+  const btn = document.getElementById('btn-autosave');
+  if (!btn) return;
+  btn.textContent = autoSaveHandle
+    ? '⏸️ 파일 자동저장 끄기'
+    : '🔄 파일 자동저장 켜기 (Chrome/Edge)';
+}
+function recordSessionToday() {
+  const today = new Date().toISOString().slice(0,10);
+  if (!progress.sessions.includes(today)) {
+    progress.sessions.push(today);
+    saveProgress();
+  }
+}
+
+// ============================================================
+// SRS LOGIC
+// ============================================================
+
+function cardState(id) {
+  return progress.cards[id] || { level: 0, lastSeen: 0, correctCount: 0, wrongCount: 0 };
+}
+function isDue(card) {
+  const s = cardState(card.id);
+  if (s.level === 0) return true;
+  const intervalMs = SRS_INTERVALS_DAYS[Math.min(s.level, SRS_INTERVALS_DAYS.length-1)] * 86400000;
+  return (Date.now() - s.lastSeen) >= intervalMs;
+}
+function dueCards() { return CARDS.filter(isDue); }
+function weakCards() {
+  return CARDS.filter(c => {
+    const s = cardState(c.id);
+    const total = s.correctCount + s.wrongCount;
+    if (total === 0) return false;
+    return (s.wrongCount / total) > 0.3 || s.wrongCount >= 2;
+  });
+}
+function recordCardAnswer(id, correct) {
+  const s = cardState(id);
+  if (correct) {
+    s.level = Math.min(s.level + 1, SRS_INTERVALS_DAYS.length - 1);
+    s.correctCount++;
+  } else {
+    s.level = Math.max(0, s.level - 1);
+    s.wrongCount++;
+  }
+  s.lastSeen = Date.now();
+  progress.cards[id] = s;
+  saveProgress();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+const views = ['dashboard', 'flashcards', 'quiz', 'reading', 'roleplay'];
+function showView(name) {
+  views.forEach(v => document.getElementById('view-'+v).classList.toggle('hidden', v !== name));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'flashcards') resetFlashView();
+  if (name === 'quiz') resetQuizView();
+  if (name === 'reading') resetReadingView();
+  if (name === 'roleplay') resetRoleplayView();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('[data-nav]').forEach(el => {
+  el.addEventListener('click', () => showView(el.dataset.nav));
+});
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+function renderWeaknessChart() {
+  const wrap = document.getElementById('weakness-chart');
+  if (!wrap) return;
+  const stats = {}; // cat -> {correct, total}
+  progress.quizHistory.forEach(h => {
+    if (!h.byCategory) return;
+    Object.entries(h.byCategory).forEach(([cat, st]) => {
+      if (!stats[cat]) stats[cat] = { correct: 0, total: 0 };
+      stats[cat].correct += st.correct || 0;
+      stats[cat].total += st.total || 0;
+    });
+  });
+  const entries = Object.entries(stats).filter(([_, st]) => st.total > 0);
+  if (entries.length === 0) {
+    wrap.innerHTML = '<p class="text-sm text-slate-500">아직 응시한 퀴즈가 없습니다. 퀴즈를 한 번 풀어보면 카테고리별 정답률이 여기에 표시됩니다.</p>';
+    return;
+  }
+  entries.sort((a,b) => (a[1].correct/a[1].total) - (b[1].correct/b[1].total));
+  wrap.innerHTML = '';
+  entries.forEach(([cat, st]) => {
+    const pct = Math.round(st.correct/st.total*100);
+    const color = pct >= 80 ? 'emerald' : pct >= 60 ? 'amber' : 'rose';
+    const row = document.createElement('div');
+    row.innerHTML = `
+      <div class="flex items-center justify-between text-xs mb-1">
+        <span class="font-medium text-slate-700">${cat}</span>
+        <span class="font-semibold text-${color}-600">${pct}% <span class="text-slate-400 font-normal">(${st.correct}/${st.total})</span></span>
+      </div>
+      <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full bg-${color}-500 progress-bar" style="width:${pct}%"></div>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function renderDashboard() {
+  const due = dueCards().length;
+  const total = CARDS.length;
+  document.getElementById('stat-due').textContent = due;
+  document.getElementById('stat-total').textContent = total;
+
+  const allQ = progress.quizHistory.reduce((acc,h)=>{acc.s+=h.score;acc.t+=h.total;return acc;},{s:0,t:0});
+  document.getElementById('stat-acc').textContent = allQ.t > 0 ? Math.round(allQ.s/allQ.t*100)+'%' : '—';
+  document.getElementById('stat-quiz-count').textContent = progress.quizHistory.length;
+
+  // streak
+  const sessions = [...progress.sessions].sort();
+  let streak = 0;
+  if (sessions.length > 0) {
+    const today = new Date().toISOString().slice(0,10);
+    let cursor = new Date(today);
+    for (let i = 0; i < 365; i++) {
+      const key = cursor.toISOString().slice(0,10);
+      if (sessions.includes(key)) { streak++; cursor.setDate(cursor.getDate()-1); }
+      else if (i === 0) { cursor.setDate(cursor.getDate()-1); }
+      else break;
+    }
+  }
+  document.getElementById('stat-streak').textContent = streak;
+  const lastDate = sessions[sessions.length-1];
+  document.getElementById('stat-last').textContent = lastDate ? `최근 학습: ${lastDate}` : '아직 시작 전';
+
+  // tracks
+  const flexCards = CARDS.filter(c => c.track === 'flex');
+  const workCards = CARDS.filter(c => c.track === 'work');
+  const flexMastered = flexCards.filter(c => cardState(c.id).level >= 3).length;
+  const workMastered = workCards.filter(c => cardState(c.id).level >= 3).length;
+  const flexPct = Math.round(flexMastered/flexCards.length*100);
+  const workPct = Math.round(workMastered/workCards.length*100);
+  document.getElementById('track-flex-bar').style.width = flexPct+'%';
+  document.getElementById('track-flex-pct').textContent = flexPct+'%';
+  document.getElementById('track-work-bar').style.width = workPct+'%';
+  document.getElementById('track-work-pct').textContent = workPct+'%';
+
+  // weakness chart — aggregate quiz history by category
+  renderWeaknessChart();
+
+  // recommendation
+  const rec = document.getElementById('recommend');
+  if (sessions.length === 0) {
+    rec.innerHTML = '👋 처음이시군요. <strong>플래시카드</strong>로 시작해 오늘 10장만 보세요. 5분이면 됩니다.';
+  } else if (due > 0) {
+    rec.innerHTML = `오늘 복습 대상 카드 <strong class="text-indigo-600">${due}장</strong>이 있어요. 먼저 정리한 뒤 퀴즈로 마무리하면 좋습니다.`;
+  } else if (allQ.t > 0 && allQ.s/allQ.t < 0.7) {
+    rec.innerHTML = '퀴즈 정답률이 70% 미만입니다. <strong>약점 카드만</strong> 모드로 보강하고, 같은 카테고리 퀴즈를 한 번 더 응시해 보세요.';
+  } else {
+    rec.innerHTML = '오늘은 신규 카드가 없네요. <strong>퀴즈</strong>로 점검하거나 어제 약점이었던 카테고리를 보강해 봅시다.';
+  }
+}
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (confirm('모든 진도와 점수가 삭제됩니다. 정말 초기화하시겠습니까?')) {
+    progress = defaultProgress();
+    saveProgress();
+    renderDashboard();
+  }
+});
+
+// Export / Import progress
+document.getElementById('btn-export').addEventListener('click', () => {
+  try {
+    const data = JSON.stringify(progress, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aula-progress-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    alert('내보내기 실패: ' + e.message);
+  }
+});
+document.getElementById('btn-autosave').addEventListener('click', toggleFileAutoSave);
+document.getElementById('file-import').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (typeof data !== 'object' || data === null) throw new Error('형식이 올바르지 않습니다');
+      progress = { ...defaultProgress(), ...data };
+      saveProgress();
+      renderDashboard();
+      alert('진도를 성공적으로 불러왔습니다.');
+    } catch(err) {
+      alert('파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = ''; // allow reimport same file
+});
+
+// ============================================================
+// FLASHCARDS
+// ============================================================
+
+let flashQueue = [];
+let flashHistory = [];
+let flashCurrent = null;
+let flashStats = { correct: 0, wrong: 0, total: 0 };
+let flashCatFilter = new Set(); // empty = all
+let flashTrackFilter = 'all'; // 'all' | 'flex' | 'work'
+
+const TRACKS = [
+  { id: 'all', label: '전체', shortLabel: '전체' },
+  { id: 'flex', label: '🅰 FLEX 시험', shortLabel: '🅰 FLEX' },
+  { id: 'work', label: '🅱 KOICA 업무', shortLabel: '🅱 KOICA' },
+];
+function cardsForTrack(t) {
+  return t === 'all' ? CARDS : CARDS.filter(c => c.track === t);
+}
+function quizzesForTrack(t) {
+  return t === 'all' ? QUIZZES : QUIZZES.filter(q => q.track === t);
+}
+function renderFlashTrackButtons() {
+  const wrap = document.getElementById('flash-track-buttons');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  TRACKS.forEach(t => {
+    const count = cardsForTrack(t.id).length;
+    const btn = document.createElement('button');
+    const active = flashTrackFilter === t.id;
+    btn.className = 'p-3 rounded-lg border-2 text-sm font-medium ' +
+      (active ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:bg-slate-50');
+    btn.innerHTML = `<div>${t.label}</div><div class="text-xs ${active ? 'text-indigo-500' : 'text-slate-500'} mt-1">${count}장</div>`;
+    btn.addEventListener('click', () => { flashTrackFilter = t.id; renderFlashSetup(); });
+    wrap.appendChild(btn);
+  });
+}
+
+function getCategories() {
+  return [...new Set(cardsForTrack(flashTrackFilter).map(c => c.cat))];
+}
+function dueCardsInTrack() { return cardsForTrack(flashTrackFilter).filter(isDue); }
+function weakCardsInTrack() {
+  return cardsForTrack(flashTrackFilter).filter(c => {
+    const s = cardState(c.id);
+    const total = s.correctCount + s.wrongCount;
+    if (total === 0) return false;
+    return (s.wrongCount / total) > 0.3 || s.wrongCount >= 2;
+  });
+}
+function renderFlashSetup() {
+  renderFlashTrackButtons();
+  document.getElementById('opt-due-count').textContent = `(${dueCardsInTrack().length})`;
+  document.getElementById('opt-weak-count').textContent = `(${weakCardsInTrack().length})`;
+  const wrap = document.getElementById('flash-cat-filter');
+  wrap.innerHTML = '';
+  const cats = getCategories();
+  // remove cat-filter entries not in current track
+  [...flashCatFilter].forEach(c => { if (!cats.includes(c)) flashCatFilter.delete(c); });
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'px-3 py-1.5 rounded-lg border text-xs font-medium ' +
+      (flashCatFilter.has(cat) ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 hover:bg-slate-50');
+    btn.textContent = cat;
+    btn.addEventListener('click', () => {
+      if (flashCatFilter.has(cat)) flashCatFilter.delete(cat); else flashCatFilter.add(cat);
+      renderFlashSetup();
+    });
+    wrap.appendChild(btn);
+  });
+  if (flashCatFilter.size > 0) {
+    const clr = document.createElement('button');
+    clr.className = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-500';
+    clr.textContent = '필터 초기화';
+    clr.addEventListener('click', () => { flashCatFilter.clear(); renderFlashSetup(); });
+    wrap.appendChild(clr);
+  }
+}
+function resetFlashView() {
+  document.getElementById('flash-setup').classList.remove('hidden');
+  document.getElementById('flash-session').classList.add('hidden');
+  document.getElementById('flash-done').classList.add('hidden');
+  renderFlashSetup();
+}
+
+document.getElementById('btn-flash-start').addEventListener('click', () => {
+  const mode = document.querySelector('input[name="flash-mode"]:checked').value;
+  let pool;
+  if (mode === 'due') pool = dueCardsInTrack();
+  else if (mode === 'weak') pool = weakCardsInTrack();
+  else pool = [...cardsForTrack(flashTrackFilter)];
+  if (flashCatFilter.size > 0) pool = pool.filter(c => flashCatFilter.has(c.cat));
+  if (pool.length === 0) {
+    alert('해당 조건의 카드가 없습니다. 다른 모드/필터를 선택하세요.');
+    return;
+  }
+  pool = pool.sort(() => Math.random() - 0.5);
+  flashQueue = pool;
+  flashHistory = [];
+  flashCurrent = null;
+  flashStats = { correct: 0, wrong: 0, total: pool.length };
+  document.getElementById('flash-setup').classList.add('hidden');
+  document.getElementById('flash-session').classList.remove('hidden');
+  recordSessionToday();
+  nextFlash();
+});
+document.getElementById('btn-flash-quit').addEventListener('click', resetFlashView);
+document.getElementById('btn-flash-again').addEventListener('click', resetFlashView);
+
+let flashShowingBack = false;
+
+// === TTS (Web Speech API) ===
+function ttsEnabled() {
+  try { return localStorage.getItem('aula_tts') !== '0'; } catch(e) { return true; }
+}
+function setTtsEnabled(v) {
+  try { localStorage.setItem('aula_tts', v ? '1' : '0'); } catch(e) {}
+  updateTtsBtn();
+}
+function updateTtsBtn() {
+  const btn = document.getElementById('btn-tts-toggle');
+  if (!btn) return;
+  btn.textContent = ttsEnabled() ? '🔊 음성' : '🔇 음성';
+}
+let _esVoice = null;
+function pickEsVoice() {
+  if (_esVoice || !('speechSynthesis' in window)) return _esVoice;
+  const voices = speechSynthesis.getVoices();
+  _esVoice = voices.find(v => /^es-(ES|US|MX|419)/i.test(v.lang)) ||
+             voices.find(v => v.lang && v.lang.toLowerCase().startsWith('es')) ||
+             null;
+  return _esVoice;
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = () => { _esVoice = null; pickEsVoice(); };
+}
+function speakES(text) {
+  if (!ttsEnabled() || !text || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickEsVoice();
+    if (v) u.voice = v;
+    u.lang = 'es-ES';
+    u.rate = 0.92;
+    u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  } catch(e) { console.warn('TTS failed', e); }
+}
+
+function renderCardFace() {
+  if (!flashCurrent) return;
+  const card = document.getElementById('flash-card');
+  const top = document.getElementById('flash-line-top');
+  const main = document.getElementById('flash-line-main');
+  const sub = document.getElementById('flash-line-sub');
+  const extra = document.getElementById('flash-line-extra');
+  const hint = document.getElementById('flash-hint');
+  top.textContent = flashCurrent.cat || '';
+  if (flashShowingBack) {
+    card.classList.remove('bg-white','border-slate-200');
+    card.classList.add('bg-indigo-600','border-indigo-600');
+    top.className = 'text-xs font-medium uppercase tracking-wide mb-3 text-indigo-200';
+    main.className = 'text-2xl font-semibold px-4 break-words text-white';
+    main.textContent = flashCurrent.ko || '';
+    sub.className = 'text-sm italic mt-4 px-4 break-words text-indigo-50';
+    sub.textContent = flashCurrent.ex || '';
+    extra.className = 'text-xs mt-2 px-4 break-words text-indigo-200';
+    extra.textContent = flashCurrent.exKo || '';
+    hint.className = 'absolute bottom-3 left-0 right-0 text-xs text-indigo-200';
+    hint.textContent = '클릭 또는 Space 로 스페인어 보기';
+  } else {
+    card.classList.remove('bg-indigo-600','border-indigo-600');
+    card.classList.add('bg-white','border-slate-200');
+    top.className = 'text-xs font-medium uppercase tracking-wide mb-3 text-slate-400';
+    main.className = 'text-3xl font-semibold px-4 break-words text-slate-900';
+    main.textContent = flashCurrent.es || '';
+    sub.className = 'text-sm italic mt-4 px-4 break-words text-slate-400';
+    sub.textContent = '';
+    extra.className = 'text-xs mt-2 px-4 break-words text-slate-400';
+    extra.textContent = '';
+    hint.className = 'absolute bottom-3 left-0 right-0 text-xs text-slate-400';
+    hint.textContent = '클릭 또는 Space 로 한국어 보기';
+  }
+}
+function toggleFlashSide() {
+  flashShowingBack = !flashShowingBack;
+  renderCardFace();
+  if (flashCurrent) {
+    speakES(flashShowingBack ? (flashCurrent.ex || flashCurrent.es) : flashCurrent.es);
+  }
+}
+function displayCurrentCard() {
+  if (!flashCurrent) return;
+  flashShowingBack = false;
+  renderCardFace();
+  const done = flashStats.total - flashQueue.length - 1;
+  document.getElementById('flash-progress').textContent = `${done + 1} / ${flashStats.total}`;
+  document.getElementById('btn-flash-prev').disabled = flashHistory.length === 0;
+  speakES(flashCurrent.es);
+}
+function nextFlash() {
+  if (flashCurrent) flashHistory.push(flashCurrent);
+  if (flashQueue.length === 0) {
+    document.getElementById('flash-session').classList.add('hidden');
+    document.getElementById('flash-done').classList.remove('hidden');
+    document.getElementById('flash-result').innerHTML =
+      `${flashStats.total}장 학습 · 알아 <strong class="text-emerald-600">${flashStats.correct}</strong> · 모름 <strong class="text-rose-600">${flashStats.wrong}</strong>`;
+    renderDashboard();
+    return;
+  }
+  flashCurrent = flashQueue.shift();
+  displayCurrentCard();
+}
+function prevFlash() {
+  if (flashHistory.length === 0) return;
+  if (flashCurrent) flashQueue.unshift(flashCurrent);
+  flashCurrent = flashHistory.pop();
+  displayCurrentCard();
+}
+document.getElementById('flash-card').addEventListener('click', toggleFlashSide);
+document.getElementById('btn-flash-prev').addEventListener('click', prevFlash);
+document.getElementById('btn-tts-toggle').addEventListener('click', (e) => {
+  e.stopPropagation();
+  setTtsEnabled(!ttsEnabled());
+});
+document.getElementById('btn-tts-replay').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!flashCurrent) return;
+  speakES(flashShowingBack ? (flashCurrent.ex || flashCurrent.es) : flashCurrent.es);
+});
+document.getElementById('btn-correct').addEventListener('click', () => {
+  if (!flashCurrent) return;
+  try { recordCardAnswer(flashCurrent.id, true); } catch(e) { console.warn(e); }
+  flashStats.correct++;
+  nextFlash();
+});
+document.getElementById('btn-wrong').addEventListener('click', () => {
+  if (!flashCurrent) return;
+  try { recordCardAnswer(flashCurrent.id, false); } catch(e) { console.warn(e); }
+  flashStats.wrong++;
+  flashQueue.push(flashCurrent); // re-show within session
+  flashStats.total++;
+  nextFlash();
+});
+
+// keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('view-flashcards').classList.contains('hidden')) return;
+  if (document.getElementById('flash-session').classList.contains('hidden')) return;
+  if (e.key === ' ') { e.preventDefault(); toggleFlashSide(); }
+  if (e.key === '1') document.getElementById('btn-wrong').click();
+  if (e.key === '2') document.getElementById('btn-correct').click();
+  if (e.key === 'ArrowLeft') document.getElementById('btn-flash-prev').click();
+});
+
+// ============================================================
+// QUIZ
+// ============================================================
+
+let quizCatFilter = 'all'; // 'all' or category name
+let quizTrackFilter = 'all'; // 'all' | 'flex' | 'work'
+let quizCount = 10;
+let quizQueue = [];
+let quizCurrent = null;
+let quizIndex = 0;
+let quizScore = 0;
+let quizSelected = null;
+let quizCategoryStats = {}; // cat -> {correct,total}
+
+function getQuizCats() {
+  return [...new Set(quizzesForTrack(quizTrackFilter).map(q => q.cat))];
+}
+function renderQuizTrackButtons() {
+  const wrap = document.getElementById('quiz-track-buttons');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  TRACKS.forEach(t => {
+    const count = quizzesForTrack(t.id).length;
+    const btn = document.createElement('button');
+    const active = quizTrackFilter === t.id;
+    btn.className = 'p-3 rounded-lg border-2 text-sm font-medium ' +
+      (active ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 hover:bg-slate-50');
+    btn.innerHTML = `<div>${t.label}</div><div class="text-xs ${active ? 'text-emerald-500' : 'text-slate-500'} mt-1">${count}문항</div>`;
+    btn.addEventListener('click', () => {
+      quizTrackFilter = t.id;
+      // reset cat filter if it no longer exists in this track
+      const validCats = ['all', ...getQuizCats()];
+      if (!validCats.includes(quizCatFilter)) quizCatFilter = 'all';
+      renderQuizSetup();
+    });
+    wrap.appendChild(btn);
+  });
+}
+function renderQuizSetup() {
+  renderQuizTrackButtons();
+  const list = document.getElementById('quiz-cat-list');
+  list.innerHTML = '';
+  const cats = ['all', ...getQuizCats()];
+  cats.forEach(cat => {
+    const pool = cat === 'all' ? quizzesForTrack(quizTrackFilter) : quizzesForTrack(quizTrackFilter).filter(q => q.cat === cat);
+    const count = pool.length;
+    const label = cat === 'all' ? '전체 카테고리' : cat;
+    const btn = document.createElement('button');
+    btn.className = 'p-3 rounded-lg border text-left text-sm ' +
+      (quizCatFilter === cat ? 'bg-emerald-50 border-emerald-600 text-emerald-700 font-semibold' : 'border-slate-200 hover:bg-slate-50');
+    btn.innerHTML = `<div class="font-medium">${label}</div><div class="text-xs text-slate-500 mt-0.5">${count}문항</div>`;
+    btn.addEventListener('click', () => { quizCatFilter = cat; renderQuizSetup(); });
+    list.appendChild(btn);
+  });
+}
+function resetQuizView() {
+  document.getElementById('quiz-setup').classList.remove('hidden');
+  document.getElementById('quiz-session').classList.add('hidden');
+  document.getElementById('quiz-done').classList.add('hidden');
+  renderQuizSetup();
+}
+document.querySelectorAll('.q-count-btn').forEach(b => b.addEventListener('click', () => {
+  quizCount = parseInt(b.dataset.qCount, 10);
+  document.querySelectorAll('.q-count-btn').forEach(x => {
+    x.classList.remove('border-2','border-indigo-600','bg-indigo-50','text-indigo-700','active');
+    x.classList.add('border','border-slate-200');
+  });
+  b.classList.remove('border','border-slate-200');
+  b.classList.add('border-2','border-indigo-600','bg-indigo-50','text-indigo-700','active');
+}));
+document.getElementById('btn-quiz-start').addEventListener('click', () => {
+  const trackPool = quizzesForTrack(quizTrackFilter);
+  let pool = quizCatFilter === 'all' ? [...trackPool] : trackPool.filter(q => q.cat === quizCatFilter);
+  if (pool.length === 0) { alert('문항이 없습니다.'); return; }
+  pool.sort(() => Math.random() - 0.5);
+  quizQueue = pool.slice(0, Math.min(quizCount, pool.length));
+  quizIndex = 0;
+  quizScore = 0;
+  quizCategoryStats = {};
+  document.getElementById('quiz-setup').classList.add('hidden');
+  document.getElementById('quiz-session').classList.remove('hidden');
+  recordSessionToday();
+  showQuizQ();
+});
+document.getElementById('btn-quiz-quit').addEventListener('click', resetQuizView);
+document.getElementById('btn-quiz-again').addEventListener('click', resetQuizView);
+
+function showQuizQ() {
+  quizCurrent = quizQueue[quizIndex];
+  quizSelected = null;
+  document.getElementById('quiz-cat').textContent = quizCurrent.cat;
+  document.getElementById('quiz-q').textContent = quizCurrent.q;
+  document.getElementById('quiz-progress').textContent = `${quizIndex+1} / ${quizQueue.length}`;
+  document.getElementById('quiz-bar').style.width = `${(quizIndex/quizQueue.length)*100}%`;
+  document.getElementById('quiz-feedback').classList.add('hidden');
+  document.getElementById('btn-quiz-next').classList.add('hidden');
+
+  const wrap = document.getElementById('quiz-options');
+  wrap.innerHTML = '';
+  quizCurrent.op.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option w-full text-left p-3 border-2 border-slate-200 rounded-lg text-sm';
+    btn.innerHTML = `<span class="inline-block w-5 h-5 mr-2 rounded-full border-2 border-slate-300 text-center text-xs leading-4">${String.fromCharCode(65+i)}</span> ${opt}`;
+    btn.addEventListener('click', () => selectQuizOption(i, btn));
+    wrap.appendChild(btn);
+  });
+}
+function selectQuizOption(idx, btn) {
+  if (quizSelected !== null) return;
+  quizSelected = idx;
+  const buttons = document.querySelectorAll('#quiz-options .quiz-option');
+  buttons.forEach((b, i) => {
+    b.classList.add('locked');
+    if (i === quizCurrent.a) b.classList.add('correct');
+    if (i === idx && i !== quizCurrent.a) b.classList.add('wrong');
+  });
+  const correct = idx === quizCurrent.a;
+  if (correct) quizScore++;
+  const cat = quizCurrent.cat;
+  if (!quizCategoryStats[cat]) quizCategoryStats[cat] = {correct:0, total:0};
+  quizCategoryStats[cat].total++;
+  if (correct) quizCategoryStats[cat].correct++;
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.remove('hidden','bg-emerald-50','text-emerald-800','bg-rose-50','text-rose-800');
+  if (correct) {
+    fb.classList.add('bg-emerald-50','text-emerald-800');
+    fb.innerHTML = `<div class="font-semibold mb-1">정답</div><div class="text-sm">${quizCurrent.exp}</div>`;
+  } else {
+    fb.classList.add('bg-rose-50','text-rose-800');
+    fb.innerHTML = `<div class="font-semibold mb-1">오답 — 정답: ${String.fromCharCode(65+quizCurrent.a)} (${quizCurrent.op[quizCurrent.a]})</div><div class="text-sm">${quizCurrent.exp}</div>`;
+  }
+  document.getElementById('btn-quiz-next').classList.remove('hidden');
+}
+document.getElementById('btn-quiz-next').addEventListener('click', () => {
+  quizIndex++;
+  if (quizIndex >= quizQueue.length) finishQuiz();
+  else showQuizQ();
+});
+function finishQuiz() {
+  document.getElementById('quiz-session').classList.add('hidden');
+  document.getElementById('quiz-done').classList.remove('hidden');
+  document.getElementById('quiz-score').textContent = quizScore;
+  document.getElementById('quiz-total').textContent = quizQueue.length;
+  document.getElementById('quiz-pct').textContent = Math.round(quizScore/quizQueue.length*100);
+  // category breakdown
+  const bd = document.getElementById('quiz-cat-breakdown');
+  bd.innerHTML = '<div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">카테고리별 결과</div>';
+  Object.entries(quizCategoryStats).forEach(([cat, st]) => {
+    const pct = Math.round(st.correct/st.total*100);
+    const color = pct >= 80 ? 'emerald' : pct >= 60 ? 'amber' : 'rose';
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3';
+    row.innerHTML = `<div class="text-sm flex-1">${cat}</div><div class="text-sm font-semibold text-${color}-600">${st.correct}/${st.total} · ${pct}%</div>`;
+    bd.appendChild(row);
+  });
+  // record history
+  progress.quizHistory.push({
+    date: new Date().toISOString(),
+    scope: quizCatFilter,
+    score: quizScore,
+    total: quizQueue.length,
+    byCategory: quizCategoryStats
+  });
+  saveProgress();
+  renderDashboard();
+}
+
+// ============================================================
+// READING
+// ============================================================
+let readingPassage = null;
+let readingQIndex = 0;
+let readingScore = 0;
+let readingStart = 0;
+let readingTimerHandle = null;
+
+function resetReadingView() {
+  document.getElementById('reading-list').classList.remove('hidden');
+  document.getElementById('reading-passage-view').classList.add('hidden');
+  document.getElementById('reading-quiz').classList.add('hidden');
+  document.getElementById('reading-done').classList.add('hidden');
+  if (readingTimerHandle) { clearInterval(readingTimerHandle); readingTimerHandle = null; }
+  renderReadingList();
+}
+function renderReadingList() {
+  const wrap = document.getElementById('reading-passage-list');
+  wrap.innerHTML = '';
+  PASSAGES.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'w-full text-left bg-white border border-slate-200 hover:bg-slate-50 rounded-xl p-4 transition';
+    btn.innerHTML = `
+      <div class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">${p.cat}</div>
+      <div class="font-semibold text-slate-900 mb-1">${p.title}</div>
+      <div class="text-xs text-slate-500">${p.body.length}단락 · ${p.questions.length}문제</div>
+    `;
+    btn.addEventListener('click', () => openPassage(p));
+    wrap.appendChild(btn);
+  });
+}
+function fmtTime(sec) {
+  const m = Math.floor(sec/60); const s = sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function openPassage(p) {
+  readingPassage = p;
+  document.getElementById('reading-list').classList.add('hidden');
+  document.getElementById('reading-passage-view').classList.remove('hidden');
+  document.getElementById('reading-cat').textContent = p.cat;
+  document.getElementById('reading-title').textContent = p.title;
+  const body = document.getElementById('reading-body');
+  body.innerHTML = '';
+  p.body.forEach(par => {
+    const pEl = document.createElement('p');
+    pEl.textContent = par;
+    body.appendChild(pEl);
+  });
+  readingStart = Date.now();
+  if (readingTimerHandle) clearInterval(readingTimerHandle);
+  readingTimerHandle = setInterval(() => {
+    const sec = Math.floor((Date.now() - readingStart)/1000);
+    document.getElementById('reading-timer').textContent = fmtTime(sec);
+  }, 1000);
+}
+document.getElementById('btn-reading-back').addEventListener('click', resetReadingView);
+document.getElementById('btn-reading-quit').addEventListener('click', resetReadingView);
+document.getElementById('btn-reading-back2').addEventListener('click', resetReadingView);
+document.getElementById('btn-reading-start-q').addEventListener('click', () => {
+  document.getElementById('reading-passage-view').classList.add('hidden');
+  document.getElementById('reading-quiz').classList.remove('hidden');
+  readingQIndex = 0;
+  readingScore = 0;
+  showReadingQ();
+});
+function showReadingQ() {
+  const q = readingPassage.questions[readingQIndex];
+  document.getElementById('reading-q-progress').textContent = `${readingQIndex+1} / ${readingPassage.questions.length}`;
+  document.getElementById('reading-q-text').textContent = q.q;
+  const opts = document.getElementById('reading-q-options');
+  opts.innerHTML = '';
+  q.op.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option w-full text-left p-3 border-2 border-slate-200 rounded-lg text-sm';
+    btn.innerHTML = `<span class="inline-block w-5 h-5 mr-2 rounded-full border-2 border-slate-300 text-center text-xs leading-4">${String.fromCharCode(65+i)}</span> ${opt}`;
+    btn.addEventListener('click', () => selectReadingOption(i));
+    opts.appendChild(btn);
+  });
+  document.getElementById('reading-q-feedback').classList.add('hidden');
+  document.getElementById('btn-reading-q-next').classList.add('hidden');
+}
+function selectReadingOption(idx) {
+  const q = readingPassage.questions[readingQIndex];
+  const buttons = document.querySelectorAll('#reading-q-options .quiz-option');
+  buttons.forEach((b, i) => {
+    b.classList.add('locked');
+    b.disabled = true;
+    if (i === q.a) b.classList.add('correct');
+    if (i === idx && i !== q.a) b.classList.add('wrong');
+  });
+  const correct = idx === q.a;
+  if (correct) readingScore++;
+  const fb = document.getElementById('reading-q-feedback');
+  fb.classList.remove('hidden','bg-emerald-50','text-emerald-800','bg-rose-50','text-rose-800');
+  if (correct) {
+    fb.classList.add('bg-emerald-50','text-emerald-800');
+    fb.innerHTML = `<div class="font-semibold mb-1">정답</div><div>${q.exp}</div>`;
+  } else {
+    fb.classList.add('bg-rose-50','text-rose-800');
+    fb.innerHTML = `<div class="font-semibold mb-1">오답 — 정답: ${String.fromCharCode(65+q.a)}</div><div>${q.exp}</div>`;
+  }
+  document.getElementById('btn-reading-q-next').classList.remove('hidden');
+}
+document.getElementById('btn-reading-q-next').addEventListener('click', () => {
+  readingQIndex++;
+  if (readingQIndex >= readingPassage.questions.length) {
+    if (readingTimerHandle) { clearInterval(readingTimerHandle); readingTimerHandle = null; }
+    document.getElementById('reading-quiz').classList.add('hidden');
+    document.getElementById('reading-done').classList.remove('hidden');
+    document.getElementById('reading-score').textContent = readingScore;
+    document.getElementById('reading-total').textContent = readingPassage.questions.length;
+    document.getElementById('reading-pct').textContent = Math.round(readingScore/readingPassage.questions.length*100);
+    document.getElementById('reading-time-final').textContent = fmtTime(Math.floor((Date.now()-readingStart)/1000));
+  } else {
+    showReadingQ();
+  }
+});
+
+// ============================================================
+// ROLEPLAY
+// ============================================================
+let roleplayCurrent = null;
+let roleplayShowKo = false;
+let roleplayQueue = [];
+let roleplayPlaying = false;
+
+function resetRoleplayView() {
+  document.getElementById('roleplay-list').classList.remove('hidden');
+  document.getElementById('roleplay-view').classList.add('hidden');
+  speechSynthesis && speechSynthesis.cancel();
+  roleplayPlaying = false;
+  renderScenarioList();
+}
+function renderScenarioList() {
+  const wrap = document.getElementById('roleplay-scenario-list');
+  wrap.innerHTML = '';
+  SCENARIOS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'w-full text-left bg-white border border-slate-200 hover:bg-slate-50 rounded-xl p-4 transition';
+    btn.innerHTML = `
+      <div class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">${s.cat}</div>
+      <div class="font-semibold text-slate-900 mb-1">${s.title}</div>
+      <div class="text-xs text-slate-500">${s.turns.length}턴 · ${s.context}</div>
+    `;
+    btn.addEventListener('click', () => openScenario(s));
+    wrap.appendChild(btn);
+  });
+}
+function openScenario(s) {
+  roleplayCurrent = s;
+  roleplayShowKo = false;
+  document.getElementById('roleplay-list').classList.add('hidden');
+  document.getElementById('roleplay-view').classList.remove('hidden');
+  document.getElementById('roleplay-cat').textContent = s.cat;
+  document.getElementById('roleplay-title').textContent = s.title;
+  document.getElementById('roleplay-context').textContent = s.context;
+  renderDialogue();
+}
+function renderDialogue() {
+  const wrap = document.getElementById('roleplay-dialogue');
+  wrap.innerHTML = '';
+  const speakerColors = {
+    'GP':'indigo', 'SD':'emerald', 'DR':'amber',
+    'CP':'slate', 'LO':'sky', 'EM':'rose'
+  };
+  roleplayCurrent.turns.forEach((t, i) => {
+    const c = speakerColors[t.speaker] || 'slate';
+    const row = document.createElement('div');
+    row.className = `bg-${c}-50 border border-${c}-200 rounded-xl p-4`;
+    row.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-xs font-semibold text-${c}-700">${t.speaker} · ${t.name}</div>
+        <button data-turn="${i}" class="rp-tts text-slate-500 hover:text-slate-900 text-xs">🔊 듣기</button>
+      </div>
+      <div class="text-slate-900 mb-1">${t.es}</div>
+      <div class="rp-ko text-sm text-slate-500 ${roleplayShowKo ? '' : 'hidden'}">${t.ko}</div>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('.rp-tts').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.turn, 10);
+      speakES(roleplayCurrent.turns[idx].es);
+    });
+  });
+  document.getElementById('btn-roleplay-mode').textContent = roleplayShowKo ? '한국어 숨기기' : '한국어 보기';
+}
+document.getElementById('btn-roleplay-back').addEventListener('click', resetRoleplayView);
+document.getElementById('btn-roleplay-mode').addEventListener('click', () => {
+  roleplayShowKo = !roleplayShowKo;
+  document.querySelectorAll('#roleplay-dialogue .rp-ko').forEach(el => el.classList.toggle('hidden', !roleplayShowKo));
+  document.getElementById('btn-roleplay-mode').textContent = roleplayShowKo ? '한국어 숨기기' : '한국어 보기';
+});
+document.getElementById('btn-roleplay-playall').addEventListener('click', () => {
+  if (roleplayPlaying) {
+    roleplayPlaying = false;
+    speechSynthesis.cancel();
+    document.getElementById('btn-roleplay-playall').textContent = '▶ 전체 재생';
+    return;
+  }
+  roleplayPlaying = true;
+  document.getElementById('btn-roleplay-playall').textContent = '⏸ 정지';
+  let i = 0;
+  function playNext() {
+    if (!roleplayPlaying || i >= roleplayCurrent.turns.length) {
+      roleplayPlaying = false;
+      document.getElementById('btn-roleplay-playall').textContent = '▶ 전체 재생';
+      return;
+    }
+    const t = roleplayCurrent.turns[i++];
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(t.es);
+    const v = pickEsVoice(); if (v) u.voice = v;
+    u.lang = 'es-ES'; u.rate = 0.92;
+    u.onend = playNext;
+    u.onerror = playNext;
+    speechSynthesis.speak(u);
+  }
+  playNext();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+loadProgress();
+renderDashboard();
+updateTtsBtn();
+updateAutoSaveBtn();
+updateSaveStatus();
+if ('speechSynthesis' in window) pickEsVoice();
+</script>
+
+</body>
+</html>
