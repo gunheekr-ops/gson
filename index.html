@@ -116,10 +116,32 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <div class="flex items-center justify-between mb-1">
-        <h3 class="font-semibold text-slate-900">💾 진도 백업</h3>
+        <h3 class="font-semibold text-slate-900">🌐 GitHub 클라우드 동기화</h3>
+        <span id="sync-status" class="text-xs font-medium text-slate-400">미연결</span>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">진도를 본인 GitHub Private Gist에 자동 저장 · 여러 기기 간 동기화</p>
+
+      <div id="sync-disconnected" class="space-y-2">
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank" class="block text-xs text-indigo-600 hover:underline">→ GitHub에서 토큰 발급하기 (Gists: Read and write 권한)</a>
+        <input type="password" id="sync-token-input" placeholder="github_pat_..." class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg" autocomplete="off">
+        <button id="btn-sync-connect" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg">🔗 동기화 켜기</button>
+      </div>
+
+      <div id="sync-connected" class="hidden space-y-2">
+        <div id="sync-gist-info" class="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-2">
+          <button id="btn-sync-pull" class="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-sm font-medium py-2 rounded-lg">📥 클라우드에서 가져오기</button>
+          <button id="btn-sync-disconnect" class="text-slate-500 hover:text-rose-500 text-xs px-3">연결 해제</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="font-semibold text-slate-900">💾 로컬 백업</h3>
         <span id="save-status" class="text-xs font-medium text-emerald-600"></span>
       </div>
-      <p class="text-xs text-slate-500 mb-4">매 카드·문항마다 브라우저에 자동 저장됩니다. 더 안전한 백업을 원하면 파일 자동저장을 켜세요.</p>
+      <p class="text-xs text-slate-500 mb-4">매 카드·문항마다 브라우저에 자동 저장됩니다. 추가 안전망으로 파일 백업도 가능.</p>
       <div id="autosave-info" class="hidden text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-3"></div>
       <div class="flex gap-2 mb-3">
         <button id="btn-export" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2 rounded-lg">📥 지금 내보내기</button>
@@ -706,6 +728,151 @@ function saveProgress() {
     updateSaveStatus();
   } catch(e) { console.warn('save failed (storage may be restricted)', e); }
   scheduleFileAutoSave();
+  scheduleSyncPush();
+}
+
+// === GitHub Gist Sync ===
+const SYNC_TOKEN_KEY = 'aula_sync_token';
+const SYNC_GIST_KEY = 'aula_sync_gist_id';
+const SYNC_FILENAME = 'aula-progress.json';
+let syncToken = null;
+let syncGistId = null;
+let syncTimer = null;
+let syncInProgress = false;
+
+function loadSyncConfig() {
+  try {
+    syncToken = localStorage.getItem(SYNC_TOKEN_KEY);
+    syncGistId = localStorage.getItem(SYNC_GIST_KEY);
+  } catch(e) {}
+}
+function updateSyncUI() {
+  const dis = document.getElementById('sync-disconnected');
+  const con = document.getElementById('sync-connected');
+  const status = document.getElementById('sync-status');
+  if (!dis || !con || !status) return;
+  if (syncToken && syncGistId) {
+    dis.classList.add('hidden');
+    con.classList.remove('hidden');
+    document.getElementById('sync-gist-info').textContent = `✅ 동기화 활성 · Gist ID: ${syncGistId.slice(0,10)}...`;
+    status.textContent = '✅ 동기화 중';
+    status.className = 'text-xs font-medium text-emerald-600';
+  } else {
+    dis.classList.remove('hidden');
+    con.classList.add('hidden');
+    status.textContent = '미연결';
+    status.className = 'text-xs font-medium text-slate-400';
+  }
+}
+async function syncConnect() {
+  const input = document.getElementById('sync-token-input');
+  const token = input.value.trim();
+  if (!token) { alert('토큰을 입력하세요.'); return; }
+  const btn = document.getElementById('btn-sync-connect');
+  btn.disabled = true; btn.textContent = '연결 중...';
+  try {
+    const res = await fetch('https://api.github.com/gists?per_page=100', {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`인증 실패 (HTTP ${res.status}). 토큰과 Gists 권한을 확인하세요.`);
+    const gists = await res.json();
+    const existing = gists.find(g => g.files && g.files[SYNC_FILENAME]);
+    if (existing) {
+      syncGistId = existing.id;
+      syncToken = token;
+      localStorage.setItem(SYNC_TOKEN_KEY, token);
+      localStorage.setItem(SYNC_GIST_KEY, syncGistId);
+      const pullRes = await fetch(`https://api.github.com/gists/${syncGistId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      const gistData = await pullRes.json();
+      const remoteProgress = JSON.parse(gistData.files[SYNC_FILENAME].content);
+      const remoteHasData = Object.keys(remoteProgress.cards || {}).length > 0 || (remoteProgress.quizHistory||[]).length > 0;
+      const localHasData = Object.keys(progress.cards || {}).length > 0 || (progress.quizHistory||[]).length > 0;
+      if (remoteHasData && localHasData) {
+        if (confirm('클라우드와 로컬에 모두 진도가 있습니다.\n\n[OK] 클라우드 데이터로 덮어쓰기 (다른 기기 진도 유지)\n[취소] 로컬 데이터 유지하고 클라우드에 푸시')) {
+          progress = { ...defaultProgress(), ...remoteProgress };
+        }
+      } else if (remoteHasData) {
+        progress = { ...defaultProgress(), ...remoteProgress };
+      }
+      saveProgress();
+      renderDashboard();
+      alert('기존 동기화 Gist에 연결됐습니다.');
+    } else {
+      const createRes = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: 'Aula de Español 학습 진도',
+          public: false,
+          files: { [SYNC_FILENAME]: { content: JSON.stringify(progress, null, 2) } }
+        })
+      });
+      if (!createRes.ok) throw new Error(`Gist 생성 실패 (HTTP ${createRes.status})`);
+      const newGist = await createRes.json();
+      syncGistId = newGist.id;
+      syncToken = token;
+      localStorage.setItem(SYNC_TOKEN_KEY, token);
+      localStorage.setItem(SYNC_GIST_KEY, syncGistId);
+      alert('동기화 시작. 진도가 GitHub Private Gist에 자동 저장됩니다.');
+    }
+    updateSyncUI();
+    input.value = '';
+  } catch(e) {
+    alert('연결 실패: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔗 동기화 켜기';
+  }
+}
+function syncDisconnect() {
+  if (!confirm('동기화를 끄시겠습니까? GitHub의 Gist는 삭제되지 않습니다.')) return;
+  syncToken = null;
+  syncGistId = null;
+  try {
+    localStorage.removeItem(SYNC_TOKEN_KEY);
+    localStorage.removeItem(SYNC_GIST_KEY);
+  } catch(e) {}
+  updateSyncUI();
+}
+async function syncPush() {
+  if (!syncToken || !syncGistId || syncInProgress) return;
+  syncInProgress = true;
+  const status = document.getElementById('sync-status');
+  if (status) { status.textContent = '⏳ 동기화 중...'; }
+  try {
+    const res = await fetch(`https://api.github.com/gists/${syncGistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${syncToken}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        files: { [SYNC_FILENAME]: { content: JSON.stringify(progress, null, 2) } }
+      })
+    });
+    if (!res.ok) console.warn('sync push failed', res.status);
+  } catch(e) { console.warn('sync push error', e); }
+  syncInProgress = false;
+  if (status && syncToken) { status.textContent = '✅ 동기화 중'; status.className = 'text-xs font-medium text-emerald-600'; }
+}
+function scheduleSyncPush() {
+  if (!syncToken || !syncGistId) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncPush, 2000);
+}
+async function syncPull() {
+  if (!syncToken || !syncGistId) return;
+  if (!confirm('클라우드의 최신 진도로 로컬을 덮어쓰시겠습니까?')) return;
+  try {
+    const res = await fetch(`https://api.github.com/gists/${syncGistId}`, {
+      headers: { 'Authorization': `Bearer ${syncToken}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const remoteProgress = JSON.parse(data.files[SYNC_FILENAME].content);
+    progress = { ...defaultProgress(), ...remoteProgress };
+    saveProgress();
+    renderDashboard();
+    alert('클라우드에서 가져오기 완료.');
+  } catch(e) { alert('가져오기 실패: ' + e.message); }
 }
 function updateSaveStatus() {
   const el = document.getElementById('save-status');
@@ -953,6 +1120,12 @@ document.getElementById('btn-export').addEventListener('click', () => {
   }
 });
 document.getElementById('btn-autosave').addEventListener('click', toggleFileAutoSave);
+document.getElementById('btn-sync-connect').addEventListener('click', syncConnect);
+document.getElementById('btn-sync-disconnect').addEventListener('click', syncDisconnect);
+document.getElementById('btn-sync-pull').addEventListener('click', syncPull);
+document.getElementById('sync-token-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') syncConnect();
+});
 document.getElementById('file-import').addEventListener('change', (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -1628,10 +1801,12 @@ document.getElementById('btn-roleplay-playall').addEventListener('click', () => 
 // INIT
 // ============================================================
 loadProgress();
+loadSyncConfig();
 renderDashboard();
 updateTtsBtn();
 updateAutoSaveBtn();
 updateSaveStatus();
+updateSyncUI();
 if ('speechSynthesis' in window) pickEsVoice();
 </script>
 
